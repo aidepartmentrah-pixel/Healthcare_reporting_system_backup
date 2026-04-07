@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import styles from '../../styles/Upload.module.css';
-
-const API_URL = 'http://localhost:8000/api/medication';
+import { API_MEDICATION as API_URL } from '../../config/api';
 
 const quarters = [
   { value: 'الفصل الأول', label: 'الفصل الأول / Q1' },

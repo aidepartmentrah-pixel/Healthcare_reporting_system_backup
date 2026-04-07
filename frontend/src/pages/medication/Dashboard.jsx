@@ -448,7 +448,7 @@ function MedicationDashboard({ language, data }) {
 
   // Fetch lean history for trend charts only
   useEffect(() => {
-    fetch('http://localhost:8000/api/medication/history')
+    fetch(`${window.__RUNTIME_CONFIG__?.apiBaseUrl || window.location.protocol + '//' + window.location.hostname + ':8000'}/api/medication/history`)
       .then(r => r.json())
       .then(result => { setHistory(Array.isArray(result) ? result : []); setHistoryLoading(false); })
       .catch(() => setHistoryLoading(false));

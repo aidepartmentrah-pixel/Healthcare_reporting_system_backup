@@ -1,0 +1,19 @@
+<service>
+  <id>HealthcareBackend</id>
+  <name>Healthcare Reporting Backend</name>
+  <description>FastAPI backend service for Healthcare Reporting System</description>
+  <executable>C:\Users\Administrator\Documents\GitHub\Healthcare_reporting_system_backup\python-service\venv\Scripts\python.exe</executable>
+  <arguments>-m uvicorn main:app --host 0.0.0.0 --port 8001</arguments>
+  <workingdirectory>C:\Users\Administrator\Documents\GitHub\Healthcare_reporting_system_backup\python-service</workingdirectory>
+  <logpath>C:\Users\Administrator\Documents\GitHub\Healthcare_reporting_system_backup\python-service\logs</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="20 sec"/>
+  <onfailure action="restart" delay="30 sec"/>
+  <resetfailure>1 hour</resetfailure>
+  <startmode>Automatic</startmode>
+  <env name="PYTHONUNBUFFERED" value="1"/>
+</service>

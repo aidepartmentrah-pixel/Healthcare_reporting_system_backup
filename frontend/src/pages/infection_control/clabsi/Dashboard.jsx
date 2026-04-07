@@ -11,8 +11,7 @@ import {
   Tooltip,
   Legend
 } from "recharts";
-
-const API_URL = "http://localhost:8000/api/clabsi";
+import { API_CLABSI as API_URL } from '../../../config/api';
 
 const GREEN  = "#16a34a";
 const RED    = "#dc2626";

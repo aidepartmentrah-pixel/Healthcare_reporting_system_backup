@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import './i18n/config';
 import './App.css';
+import { API_URL, API_MEDICATION } from './config/api';
 
 class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { hasError: false }; }
@@ -55,21 +56,21 @@ function App() {
   }, [language]);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/history')
+    fetch(`${API_URL}/history`)
       .then(res => res.json())
       .then(data => setHistoryData(data))
       .catch(err => console.error('Failed to load history:', err));
   }, []);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/current')
+    fetch(`${API_URL}/current`)
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data) setMortalityData(data); })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/medication/current')
+    fetch(`${API_MEDICATION}/current`)
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data) setMedicationData(data); })
       .catch(() => {});

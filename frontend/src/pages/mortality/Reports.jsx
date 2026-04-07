@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import styles from '../../styles/Reports.module.css';
-
-const API_URL = 'http://localhost:8000/api';
+import { API_URL } from '../../config/api';
 
 const QUARTER_ORDER = {
   'الفصل الأول': 1, 'الفصل الاول': 1,

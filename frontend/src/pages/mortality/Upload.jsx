@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styles from '../../styles/Upload.module.css';
-
-const API_URL = 'http://localhost:8000/api';
+import { API_URL } from '../../config/api';
 
 function Upload({ onDataLoaded }) {
   const { t } = useTranslation();

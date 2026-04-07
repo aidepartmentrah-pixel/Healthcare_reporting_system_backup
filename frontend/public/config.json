@@ -1,0 +1,5 @@
+{
+  "apiBaseUrl": "http://170.70.32.34:8001",
+  "serverIp": "170.70.32.34",
+  "_note": "Update apiBaseUrl if server IP changes. No rebuild needed."
+}

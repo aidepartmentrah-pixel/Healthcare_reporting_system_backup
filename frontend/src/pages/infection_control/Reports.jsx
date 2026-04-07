@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import styles from '../../styles/Reports.module.css';
-
-const API_BASE = 'http://localhost:8000';
+import { API_BASE } from '../../config/api';
 
 const QUARTER_AR = {
   "الفصل الأول":  { ar: "الفصل الأول",  en: "First Quarter"  },

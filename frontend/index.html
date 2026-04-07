@@ -3,7 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Healthcare Mortality System</title>
+    <title>Healthcare Reporting System</title>
+    <!-- Load runtime config before app starts -->
+    <script>
+      // Load config.json synchronously to set API base URL before React loads
+      (function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/config.json', false); // Synchronous
+        try {
+          xhr.send();
+          if (xhr.status === 200) {
+            window.__RUNTIME_CONFIG__ = JSON.parse(xhr.responseText);
+          }
+        } catch (e) {
+          console.warn('Could not load config.json, using defaults');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

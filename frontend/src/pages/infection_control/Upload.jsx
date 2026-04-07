@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import styles from '../../styles/Upload.module.css';
+import { API_VAP, API_CLABSI, API_CAUTI } from '../../config/api';
 
 const quarters = [
   { value: 1, label: 'الفصل الأول / Q1' },
@@ -18,7 +19,7 @@ const TABS = [
     icon: '🫁',
     color: 'linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #0d9488 100%)',
     btnColor: 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
-    apiUrl: 'http://localhost:8000/api/vap',
+    apiUrl: API_VAP,
     navigateTo: '/vap/dashboard',
     departments: ['ICU', 'CCU', 'CSU', 'ICN', 'Pediatric', 'ITU'],
     daysKey: 'ventilatorDaysPerDept',
@@ -39,7 +40,7 @@ const TABS = [
     icon: '🦠',
     color: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #1d4ed8 100%)',
     btnColor: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
-    apiUrl: 'http://localhost:8000/api/clabsi',
+    apiUrl: API_CLABSI,
     navigateTo: '/clabsi/dashboard',
     departments: ['ICU', 'CCU', 'CSU', 'ICN', 'Pediatric', 'ITU'],
     daysKey: 'catheterDaysPerDept',
@@ -57,7 +58,7 @@ const TABS = [
     icon: '🧫',
     color: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 50%, #c2410c 100%)',
     btnColor: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 100%)',
-    apiUrl: 'http://localhost:8000/api/cauti',
+    apiUrl: API_CAUTI,
     navigateTo: '/cauti/dashboard',
     departments: ['ICU', 'CCU', 'CSU', 'Ped', 'ICN', '3rd West', 'ITU'],
     daysKey: 'urinaryCatheterDaysPerDept',

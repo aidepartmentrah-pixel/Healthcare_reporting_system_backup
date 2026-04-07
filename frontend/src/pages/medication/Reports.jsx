@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import styles from '../../styles/Reports.module.css';
-
-const API_URL = 'http://localhost:8000/api/medication';
+import { API_MEDICATION as API_URL } from '../../config/api';
 
 const TEAL = 'linear-gradient(135deg, #0d9488 0%, #0891b2 100%)';
 const TEAL_DARK = '#0f766e';
