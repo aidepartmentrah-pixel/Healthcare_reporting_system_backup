@@ -77,6 +77,13 @@
     "total_doses": 431124
   },
   {
+    "quarter": "الفصل الرابع",
+    "year": "2025",
+    "error_rate": 0.021,
+    "total_errors": 95,
+    "total_doses": 453314
+  },
+  {
     "quarter": "الفصل الأول",
     "year": "2026",
     "error_rate": 0.0104,

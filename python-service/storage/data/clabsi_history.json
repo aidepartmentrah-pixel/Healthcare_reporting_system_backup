@@ -364,32 +364,32 @@
     "summary": {
       "ICU": {
         "cases": 10,
-        "catheter_days": 200,
-        "rate": 50.0
+        "catheter_days": 884,
+        "rate": 11.31
       },
       "CCU": {
         "cases": 1,
-        "catheter_days": 389,
-        "rate": 2.57
+        "catheter_days": 177,
+        "rate": 5.65
       },
       "CSU": {
         "cases": 3,
-        "catheter_days": 230,
-        "rate": 13.04
+        "catheter_days": 1054,
+        "rate": 2.85
       },
       "ICN": {
         "cases": 1,
-        "catheter_days": 123,
-        "rate": 8.13
+        "catheter_days": 374,
+        "rate": 2.67
       },
       "Pediatric": {
         "cases": 0,
-        "catheter_days": 32,
+        "catheter_days": 108,
         "rate": 0.0
       },
       "ITU": {
         "cases": 0,
-        "catheter_days": 127,
+        "catheter_days": 52,
         "rate": 0.0
       }
     },

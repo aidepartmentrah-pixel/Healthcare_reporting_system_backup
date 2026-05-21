@@ -282,37 +282,37 @@
     "summary": {
       "ICU": {
         "cases": 5,
-        "urinary_catheter_days": 766,
-        "rate": 6.53
+        "urinary_catheter_days": 1663,
+        "rate": 3.01
       },
       "CCU": {
         "cases": 1,
-        "urinary_catheter_days": 667,
-        "rate": 1.5
+        "urinary_catheter_days": 222,
+        "rate": 4.5
       },
       "CSU": {
         "cases": 0,
-        "urinary_catheter_days": 233,
+        "urinary_catheter_days": 1044,
         "rate": 0.0
       },
       "Ped": {
         "cases": 0,
-        "urinary_catheter_days": 12,
+        "urinary_catheter_days": 2,
         "rate": 0.0
       },
       "ICN": {
         "cases": 0,
-        "urinary_catheter_days": 32,
+        "urinary_catheter_days": 45,
         "rate": 0.0
       },
       "3rd West": {
         "cases": 0,
-        "urinary_catheter_days": 23,
+        "urinary_catheter_days": 11,
         "rate": 0.0
       },
       "ITU": {
         "cases": 0,
-        "urinary_catheter_days": 323,
+        "urinary_catheter_days": 54,
         "rate": 0.0
       }
     },
