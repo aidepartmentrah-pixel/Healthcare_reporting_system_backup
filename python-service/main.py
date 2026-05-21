@@ -16,6 +16,7 @@ from app.api.medication_routes import router as medication_router
 from app.api.vap_routes import router as vap_router
 from app.api.clabsi_routes import router as clabsi_router
 from app.api.cauti_routes import router as cauti_router
+from app.api.admin_routes import router as admin_router
 
 # Configure logging
 logger.remove()
@@ -57,6 +58,7 @@ app.include_router(medication_router, prefix="/api/medication")
 app.include_router(vap_router)          # prefix "/api/vap" already set in the router
 app.include_router(clabsi_router)       # prefix "/api/clabsi" already set in the router
 app.include_router(cauti_router)        # prefix "/api/cauti" already set in the router
+app.include_router(admin_router)        # prefix "/api/admin" already set in the router
 
 
 @app.get("/health")
@@ -73,6 +75,9 @@ async def health_check():
 @app.on_event("startup")
 async def startup_event():
     """Initialize service"""
+    from app.config import init_config_files
+    init_config_files()
+
     logger.info("=" * 60)
     logger.info("Healthcare Quality Indicators — Python Service v2.0")
     logger.info("=" * 60)

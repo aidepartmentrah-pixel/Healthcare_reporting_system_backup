@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styles from '../../styles/Dashboard.module.css';
+import DashboardSearch from '../../components/DashboardSearch';
 
 import {
   LineChart, Line,
@@ -11,7 +12,7 @@ import {
   PieChart, Pie, Cell, Sector,
   XAxis, YAxis,
   CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer,
+  ResponsiveContainer, LabelList,
 } from 'recharts';
 
 // ─── RTL/LTR + Font fix ───────────────────────────────────────────────────────
@@ -65,9 +66,9 @@ const TH_STYLE = {
 const TD_STYLE = { padding: '9px 12px', color: '#475569', verticalAlign: 'middle' };
 
 // ─── Section ──────────────────────────────────────────────────────────────────
-function Section({ title, icon, children }) {
+function Section({ id, title, icon, children }) {
   return (
-    <div style={{ marginBottom: 36, direction: 'ltr' }}>
+    <div id={id} style={{ marginBottom: 36, direction: 'ltr' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, direction: 'ltr' }}>
         <span style={{ fontSize: 18 }}>{icon}</span>
         <h2 style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: 0 }}>{title}</h2>
@@ -438,13 +439,13 @@ function buildCrossTab(rowDict, colDict) {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN DASHBOARD
 // ═════════════════════════════════════════════════════════════════════════════
-function MedicationDashboard({ language, data }) {
+function MedicationDashboard({ language, data, medicationTarget = 0.03 }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const ar = i18n.language === 'ar';
   const [history, setHistory]           = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
-  const TARGET = 0.03;
+  const TARGET = medicationTarget;
 
   // Fetch lean history for trend charts only
   useEffect(() => {
@@ -509,16 +510,10 @@ function MedicationDashboard({ language, data }) {
     .filter(d => d.count > 0).sort((a, b) => b.count - a.count);
   const totalCauses = causesData.reduce((s, d) => s + d.count, 0);
 
-  // ── Pareto ─────────────────────────────────────────────────────────────────
-  let cum = 0;
-  const paretoData = causesData.map(item => {
-    cum += item.count;
-    return { ...item, cumPct: Number(((cum / totalCauses) * 100).toFixed(1)) };
-  });
-
   // ── Heatmaps ───────────────────────────────────────────────────────────────
-  const cycleCauseRaw = stats.heatmap_cycle_cause;
-  const causeCycleRaw = stats.heatmap_cause_cycle;
+  const cycleCauseRaw  = stats.heatmap_cycle_cause;
+  const causeCycleRaw  = stats.heatmap_cause_cycle;
+  const causeUnitRaw   = stats.heatmap_cause_unit || {};
 
   const cycleDict = Object.fromEntries(cycleData.map(d => [d.name, d.value]));
   const causeDict = Object.fromEntries(causesData.map(d => [d.cause, d.count]));
@@ -530,6 +525,48 @@ function MedicationDashboard({ language, data }) {
   const { matrix: hm2, rows: hm2rows, cols: hm2cols } = causeCycleRaw
     ? { matrix: causeCycleRaw, rows: Object.keys(causeCycleRaw), cols: Array.from(new Set(Object.values(causeCycleRaw).flatMap(Object.keys))) }
     : buildCrossTab(causeDict, cycleDict);
+
+  // ── Cause × Nursing Unit ───────────────────────────────────────────────────
+  const causeUnitCauses = Object.keys(causeUnitRaw);
+  const causeUnitUnits  = Array.from(new Set(causeUnitCauses.flatMap(c => Object.keys(causeUnitRaw[c] || {}))));
+  // Stacked bar: one entry per nursing unit, fields = each cause
+  const causeUnitStackedData = causeUnitUnits.map(unit => {
+    const row = { unit };
+    causeUnitCauses.forEach(cause => { row[cause] = causeUnitRaw[cause]?.[unit] || 0; });
+    return row;
+  }).sort((a, b) => {
+    const aTotal = causeUnitCauses.reduce((s, c) => s + (a[c] || 0), 0);
+    const bTotal = causeUnitCauses.reduce((s, c) => s + (b[c] || 0), 0);
+    return bTotal - aTotal;
+  });
+
+  // ── Cause × Job Title ──────────────────────────────────────────────────────
+  const causeJobRaw    = stats.heatmap_cause_job || {};
+  const causeJobCauses = Object.keys(causeJobRaw);
+  const causeJobTitles = Array.from(new Set(causeJobCauses.flatMap(c => Object.keys(causeJobRaw[c] || {}))));
+  const causeJobStackedData = causeJobTitles.map(title => {
+    const row = { title };
+    causeJobCauses.forEach(cause => { row[cause] = causeJobRaw[cause]?.[title] || 0; });
+    return row;
+  }).sort((a, b) => {
+    const aTotal = causeJobCauses.reduce((s, c) => s + (a[c] || 0), 0);
+    const bTotal = causeJobCauses.reduce((s, c) => s + (b[c] || 0), 0);
+    return bTotal - aTotal;
+  });
+
+  // ── Cause × Duty Shift ─────────────────────────────────────────────────────
+  const causeShiftRaw    = stats.heatmap_cause_shift || {};
+  const causeShiftCauses = Object.keys(causeShiftRaw);
+  const causeShiftShifts = Array.from(new Set(causeShiftCauses.flatMap(c => Object.keys(causeShiftRaw[c] || {}))));
+  const causeShiftStackedData = causeShiftShifts.map(shift => {
+    const row = { shift };
+    causeShiftCauses.forEach(cause => { row[cause] = causeShiftRaw[cause]?.[shift] || 0; });
+    return row;
+  }).sort((a, b) => {
+    const aTotal = causeShiftCauses.reduce((s, c) => s + (a[c] || 0), 0);
+    const bTotal = causeShiftCauses.reduce((s, c) => s + (b[c] || 0), 0);
+    return bTotal - aTotal;
+  });
 
   // ── Trend data: lean history + current quarter ─────────────────────────────
   const sortedHistory = sortQuarters(history);
@@ -578,8 +615,22 @@ function MedicationDashboard({ language, data }) {
           </div>
         </div>
 
+        {/* ── Section Search ── */}
+        <DashboardSearch sections={[
+          { id: 'med-kpi',          ar: 'مؤشرات الأداء الرئيسية',          en: 'Key Performance Indicators' },
+          { id: 'med-performance',  ar: 'أداء الربع الحالي',               en: 'Current Quarter Performance' },
+          { id: 'med-cause-dist',   ar: 'توزيع أسباب الأخطاء',             en: 'Error Cause Distribution' },
+          { id: 'med-heatmaps',     ar: 'تحليل المصفوفة الحرارية',          en: 'Cross-Analysis Heatmaps' },
+          { id: 'med-cause-dept',   ar: 'سبب الخطأ مع القسم',              en: 'Cause of Error by Department' },
+          { id: 'med-cause-job',    ar: 'سبب الخطأ مع الكادر المتسبب',     en: 'Cause of Error by Job Title' },
+          { id: 'med-cause-shift',  ar: 'سبب الخطأ مع فترة المناوبة',      en: 'Cause of Error by Duty Shift' },
+          { id: 'med-error-dist',   ar: 'توزيع الأخطاء',                   en: 'Error Distribution' },
+          { id: 'med-dept-analysis',ar: 'تحليل الأقسام',                   en: 'Department Analysis' },
+          { id: 'med-trend',        ar: 'تحليل الاتجاهات',                 en: 'Trend Analysis' },
+        ]} />
+
         {/* ═══ SECTION 1 — KPIs ═══ */}
-        <Section title={t('kpiTitle')} icon="📊">
+        <Section id="med-kpi" title={t('kpiTitle')} icon="📊">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, direction: 'ltr' }}>
             <KpiCard icon="💊" label={t('totalErrors')} value={totalErrors.toLocaleString()}
               badge={`Q${Q_ORDER[currentQuarter] || '?'} ${currentYear}`} />
@@ -594,7 +645,7 @@ function MedicationDashboard({ language, data }) {
         </Section>
 
         {/* ═══ SECTION 2 — CURRENT QUARTER PERFORMANCE ═══ */}
-        <Section title={t('currentQuarterPerformance')} icon="🎯">
+        <Section id="med-performance" title={t('currentQuarterPerformance')} icon="🎯">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, direction: 'ltr' }}>
             <Card>
               <CardHeader title={t('performanceGauge')} badge={`Target: ${TARGET}%`} />
@@ -626,44 +677,19 @@ function MedicationDashboard({ language, data }) {
         </Section>
 
         {/* ═══ SECTION 3 — CAUSE DISTRIBUTION ═══ */}
-        <Section title={t('causeDistributionTitle')} icon="🔎">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, direction: 'ltr' }}>
-            <Card>
-              <CardHeader title={t('causeOfErrorDistribution')} badge={`${causesData.length} causes`} />
-              <CardBody>
-                {causesData.length === 0
-                  ? <div style={{ color: SLATE }}>No cause data available</div>
-                  : <CauseDistributionChart data={causesData} />}
-              </CardBody>
-            </Card>
-            <Card>
-              <CardHeader title={t('paretoAnalysis')} badge="80/20 Rule" />
-              <CardBody style={{ padding: '12px 8px 8px' }}>
-                {paretoData.length === 0
-                  ? <div style={{ color: SLATE }}>No data available</div>
-                  : (
-                    <div dir="ltr">
-                      <ResponsiveContainer width="100%" height={380}>
-                        <ComposedChart data={paretoData} margin={{ top: 20, right: 44, left: 8, bottom: 80 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                          <XAxis dataKey="cause" interval={0} angle={-35} textAnchor="end" height={90} tick={{ fontSize: 10, fill: '#64748b' }} />
-                          <YAxis yAxisId="left" allowDecimals={false} tick={{ fontSize: 11 }} width={32} />
-                          <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={v => `${v}%`} tick={{ fontSize: 11, fill: AMBER }} width={38} />
-                          <Tooltip {...TS} formatter={(v, name) => name === 'Cumulative %' ? [`${v}%`, name] : [v, 'Errors']} />
-                          <Legend verticalAlign="top" height={30} />
-                          <Bar yAxisId="left" dataKey="count" name="Errors" fill={BLUE} radius={[5, 5, 0, 0]} barSize={34} />
-                          <Line yAxisId="right" type="monotone" dataKey="cumPct" name="Cumulative %" stroke={RED} strokeWidth={2.5} dot={{ r: 4, fill: RED }} activeDot={{ r: 6 }} />
-                        </ComposedChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-              </CardBody>
-            </Card>
-          </div>
+        <Section id="med-cause-dist" title={t('causeDistributionTitle')} icon="🔎">
+          <Card>
+            <CardHeader title={t('causeOfErrorDistribution')} badge={`${causesData.length} causes`} />
+            <CardBody>
+              {causesData.length === 0
+                ? <div style={{ color: SLATE }}>No cause data available</div>
+                : <CauseDistributionChart data={causesData} />}
+            </CardBody>
+          </Card>
         </Section>
 
         {/* ═══ SECTION 4 — HEATMAPS ═══ */}
-        <Section title={t('crossAnalysisHeatmaps')} icon="🌡️">
+        <Section id="med-heatmaps" title={t('crossAnalysisHeatmaps')} icon="🌡️">
 
           {/* Approximation notice when no real cross-tab from backend */}
           {!cycleCauseRaw && (
@@ -695,8 +721,266 @@ function MedicationDashboard({ language, data }) {
           </Card>
         </Section>
 
-        {/* ═══ SECTION 5 — ERROR DISTRIBUTION ═══ */}
-        <Section title={t('errorDistribution')} icon="🔍">
+        {/* ═══ SECTION 5 — CAUSE × DEPARTMENT ═══ */}
+        {causeUnitCauses.length > 0 && (
+          <Section id="med-cause-dept" title={ar ? 'سبب الخطأ مع القسم' : 'Cause of Error by Department'} icon="🏥">
+
+            {/* Heatmap */}
+            <Card style={{ marginBottom: 16 }}>
+              <CardHeader
+                title={ar ? 'سبب الخطأ × القسم' : 'Cause of Error × Department — Heatmap'}
+                badge={`${causeUnitCauses.length} ${ar ? 'سبب' : 'causes'} · ${causeUnitUnits.length} ${ar ? 'قسم' : 'departments'}`}
+              />
+              <CardBody style={{ padding: '14px 12px' }}>
+                <Heatmap
+                  rows={causeUnitCauses}
+                  cols={causeUnitUnits}
+                  matrix={causeUnitRaw}
+                  rowLabel={ar ? 'السبب' : 'Cause'}
+                  colLabel={ar ? 'القسم' : 'Department'}
+                  grandTotal={totalErrors}
+                />
+              </CardBody>
+            </Card>
+
+            {/* Stacked Bar */}
+            <Card>
+              <CardHeader
+                title={ar ? 'الأخطاء لكل قسم — حسب السبب' : 'Errors per Department — Stacked by Cause'}
+                badge={ar ? 'مرتب حسب إجمالي الأخطاء' : 'Sorted by total errors'}
+              />
+              <CardBody style={{ padding: '12px 8px 8px' }}>
+                <div dir="ltr">
+                  <ResponsiveContainer
+                    width="100%"
+                    height={Math.max(340, causeUnitStackedData.length * 42) + 80}
+                  >
+                    <BarChart
+                      data={causeUnitStackedData}
+                      layout="vertical"
+                      margin={{ top: 4, right: 120, left: 8, bottom: 70 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                      <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                      <YAxis
+                        type="category"
+                        dataKey="unit"
+                        width={160}
+                        tick={{ fontSize: 11, fill: '#334155' }}
+                      />
+                      <Tooltip
+                        {...TS}
+                        formatter={(v, name) => [`${v} errors`, name]}
+                      />
+                      <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                      {causeUnitCauses.map((cause, i) => (
+                        <Bar
+                          key={cause}
+                          dataKey={cause}
+                          name={cause}
+                          stackId="a"
+                          fill={PALETTE[i % PALETTE.length]}
+                          radius={i === causeUnitCauses.length - 1 ? [0, 5, 5, 0] : [0, 0, 0, 0]}
+                        >
+                          {i === causeUnitCauses.length - 1 && (
+                            <LabelList
+                              content={(props) => {
+                                const { x, y, width, height, index } = props;
+                                const row = causeUnitStackedData[index];
+                                if (!row) return null;
+                                const rowTotal = causeUnitCauses.reduce((s, c) => s + (row[c] || 0), 0);
+                                const grandTotal = causeUnitStackedData.reduce((s, r) => s + causeUnitCauses.reduce((ss, c) => ss + (r[c] || 0), 0), 0);
+                                const pct = grandTotal > 0 ? (rowTotal / grandTotal * 100).toFixed(1) : '0';
+                                return (
+                                  <text x={x + width + 6} y={y + height / 2 + 4} fontSize={11} fontWeight={700} fill="#475569">
+                                    {rowTotal} ({pct}%)
+                                  </text>
+                                );
+                              }}
+                            />
+                          )}
+                        </Bar>
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardBody>
+            </Card>
+          </Section>
+        )}
+
+        {/* ═══ SECTION 6 — CAUSE × JOB TITLE ═══ */}
+        {causeJobCauses.length > 0 && (
+          <Section id="med-cause-job" title={ar ? 'سبب الخطأ مع الكادر المتسبب' : 'Cause of Error by Job Title'} icon="👤">
+
+            {/* Heatmap */}
+            <Card style={{ marginBottom: 16 }}>
+              <CardHeader
+                title={ar ? 'سبب الخطأ × الكادر المتسبب' : 'Cause of Error × Job Title — Heatmap'}
+                badge={`${causeJobCauses.length} ${ar ? 'سبب' : 'causes'} · ${causeJobTitles.length} ${ar ? 'فئة' : 'job titles'}`}
+              />
+              <CardBody style={{ padding: '14px 12px' }}>
+                <Heatmap
+                  rows={causeJobCauses}
+                  cols={causeJobTitles}
+                  matrix={causeJobRaw}
+                  rowLabel={ar ? 'السبب' : 'Cause'}
+                  colLabel={ar ? 'الكادر' : 'Job Title'}
+                  grandTotal={totalErrors}
+                />
+              </CardBody>
+            </Card>
+
+            {/* Stacked Bar */}
+            <Card>
+              <CardHeader
+                title={ar ? 'الأخطاء لكل كادر — حسب السبب' : 'Errors per Job Title — Stacked by Cause'}
+                badge={ar ? 'مرتب حسب إجمالي الأخطاء' : 'Sorted by total errors'}
+              />
+              <CardBody style={{ padding: '12px 8px 8px' }}>
+                <div dir="ltr">
+                  <ResponsiveContainer
+                    width="100%"
+                    height={Math.max(300, causeJobStackedData.length * 52) + 80}
+                  >
+                    <BarChart
+                      data={causeJobStackedData}
+                      layout="vertical"
+                      margin={{ top: 4, right: 120, left: 8, bottom: 70 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                      <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                      <YAxis
+                        type="category"
+                        dataKey="title"
+                        width={140}
+                        tick={{ fontSize: 11, fill: '#334155' }}
+                      />
+                      <Tooltip {...TS} formatter={(v, name) => [`${v} errors`, name]} />
+                      <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                      {causeJobCauses.map((cause, i) => (
+                        <Bar
+                          key={cause}
+                          dataKey={cause}
+                          name={cause}
+                          stackId="a"
+                          fill={PALETTE[i % PALETTE.length]}
+                          radius={i === causeJobCauses.length - 1 ? [0, 5, 5, 0] : [0, 0, 0, 0]}
+                        >
+                          {i === causeJobCauses.length - 1 && (
+                            <LabelList
+                              content={(props) => {
+                                const { x, y, width, height, index } = props;
+                                const row = causeJobStackedData[index];
+                                if (!row) return null;
+                                const rowTotal = causeJobCauses.reduce((s, c) => s + (row[c] || 0), 0);
+                                const grandTotal = causeJobStackedData.reduce((s, r) => s + causeJobCauses.reduce((ss, c) => ss + (r[c] || 0), 0), 0);
+                                const pct = grandTotal > 0 ? (rowTotal / grandTotal * 100).toFixed(1) : '0';
+                                return (
+                                  <text x={x + width + 6} y={y + height / 2 + 4} fontSize={11} fontWeight={700} fill="#475569">
+                                    {rowTotal} ({pct}%)
+                                  </text>
+                                );
+                              }}
+                            />
+                          )}
+                        </Bar>
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardBody>
+            </Card>
+          </Section>
+        )}
+
+        {/* ═══ SECTION 7 — CAUSE × DUTY SHIFT ═══ */}
+        {causeShiftCauses.length > 0 && (
+          <Section id="med-cause-shift" title={ar ? 'سبب الخطأ مع فترة المناوبة' : 'Cause of Error by Duty Shift'} icon="🕐">
+
+            {/* Heatmap */}
+            <Card style={{ marginBottom: 16 }}>
+              <CardHeader
+                title={ar ? 'سبب الخطأ × فترة المناوبة' : 'Cause of Error × Duty Shift — Heatmap'}
+                badge={`${causeShiftCauses.length} ${ar ? 'سبب' : 'causes'} · ${causeShiftShifts.length} ${ar ? 'فترة' : 'shifts'}`}
+              />
+              <CardBody style={{ padding: '14px 12px' }}>
+                <Heatmap
+                  rows={causeShiftCauses}
+                  cols={causeShiftShifts}
+                  matrix={causeShiftRaw}
+                  rowLabel={ar ? 'السبب' : 'Cause'}
+                  colLabel={ar ? 'المناوبة' : 'Shift'}
+                  grandTotal={totalErrors}
+                />
+              </CardBody>
+            </Card>
+
+            {/* Stacked Bar */}
+            <Card>
+              <CardHeader
+                title={ar ? 'الأخطاء لكل مناوبة — حسب السبب' : 'Errors per Shift — Stacked by Cause'}
+                badge={ar ? 'مرتب حسب إجمالي الأخطاء' : 'Sorted by total errors'}
+              />
+              <CardBody style={{ padding: '12px 8px 8px' }}>
+                <div dir="ltr">
+                  <ResponsiveContainer
+                    width="100%"
+                    height={Math.max(280, causeShiftStackedData.length * 60) + 80}
+                  >
+                    <BarChart
+                      data={causeShiftStackedData}
+                      layout="vertical"
+                      margin={{ top: 4, right: 120, left: 8, bottom: 70 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                      <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                      <YAxis
+                        type="category"
+                        dataKey="shift"
+                        width={120}
+                        tick={{ fontSize: 11, fill: '#334155' }}
+                      />
+                      <Tooltip {...TS} formatter={(v, name) => [`${v} errors`, name]} />
+                      <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
+                      {causeShiftCauses.map((cause, i) => (
+                        <Bar
+                          key={cause}
+                          dataKey={cause}
+                          name={cause}
+                          stackId="a"
+                          fill={PALETTE[i % PALETTE.length]}
+                          radius={i === causeShiftCauses.length - 1 ? [0, 5, 5, 0] : [0, 0, 0, 0]}
+                        >
+                          {i === causeShiftCauses.length - 1 && (
+                            <LabelList
+                              content={(props) => {
+                                const { x, y, width, height, index } = props;
+                                const row = causeShiftStackedData[index];
+                                if (!row) return null;
+                                const rowTotal = causeShiftCauses.reduce((s, c) => s + (row[c] || 0), 0);
+                                const grandTotal = causeShiftStackedData.reduce((s, r) => s + causeShiftCauses.reduce((ss, c) => ss + (r[c] || 0), 0), 0);
+                                const pct = grandTotal > 0 ? (rowTotal / grandTotal * 100).toFixed(1) : '0';
+                                return (
+                                  <text x={x + width + 6} y={y + height / 2 + 4} fontSize={11} fontWeight={700} fill="#475569">
+                                    {rowTotal} ({pct}%)
+                                  </text>
+                                );
+                              }}
+                            />
+                          )}
+                        </Bar>
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardBody>
+            </Card>
+          </Section>
+        )}
+
+        {/* ═══ SECTION 8 — ERROR DISTRIBUTION ═══ */}
+        <Section id="med-error-dist" title={t('errorDistribution')} icon="🔍">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16, direction: 'ltr' }}>
             <Card>
               <CardHeader title={t('errorsByMedCycle')} badge={`Total: ${totalErrors}`} />
@@ -727,8 +1011,8 @@ function MedicationDashboard({ language, data }) {
           </div>
         </Section>
 
-        {/* ═══ SECTION 6 — DEPARTMENT ANALYSIS ═══ */}
-        <Section title={t('departmentAnalysis')} icon="🏥">
+        {/* ═══ SECTION 9 — DEPARTMENT ANALYSIS ═══ */}
+        <Section id="med-dept-analysis" title={t('departmentAnalysis')} icon="🏥">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, direction: 'ltr' }}>
             <Card>
               <CardHeader title={t('top8Departments')} />
@@ -745,8 +1029,8 @@ function MedicationDashboard({ language, data }) {
           </div>
         </Section>
 
-        {/* ═══ SECTION 7 — TREND ANALYSIS ═══ */}
-        <Section title={t('trendAnalysis')} icon="📈">
+        {/* ═══ SECTION 10 — TREND ANALYSIS ═══ */}
+        <Section id="med-trend" title={t('trendAnalysis')} icon="📈">
 
           {/* All quarters area trend */}
           <Card style={{ marginBottom: 16 }}>

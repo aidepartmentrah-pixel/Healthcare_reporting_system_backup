@@ -72,11 +72,7 @@ class MedicationErrorProcessor:
             df = df.copy()
         
         logger.info("🧹 Cleaning data...")
-        
-        # Remove last row if it contains total doses
-        if self.total_doses:
-            df = df[:-1]
-        
+
         # Standardize column names
         column_mapping = {
             'Medication Error Cycle ': 'error_cycle',

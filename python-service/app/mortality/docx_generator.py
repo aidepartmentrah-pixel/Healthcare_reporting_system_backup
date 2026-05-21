@@ -88,6 +88,12 @@ class MatplotlibDocxGenerator:
 
         stats             = data.get('statistics', {})
         mortality_metrics = stats.get('mortality_metrics', {})
+        all_records  = data.get('records', [])
+        non_kpi_records = [
+            r for r in all_records
+            if str(r.get('include_kpi', 'YES')).strip().upper() != 'YES'
+        ]
+
         current_stats = {
             'quarter':            quarter,
             'year':               year,
@@ -104,7 +110,8 @@ class MatplotlibDocxGenerator:
             'departments':        stats.get('departments', []),
             'specialties':        stats.get('specialties', []),
             'who_categories':     data.get('who_categories', []),
-            'who_categories_kpi': stats.get('who_categories_kpi', {})
+            'who_categories_kpi': stats.get('who_categories_kpi', {}),
+            'non_kpi_deaths':     non_kpi_records,
         }
 
         logger.info("Generating Matplotlib charts...")
@@ -121,6 +128,7 @@ class MatplotlibDocxGenerator:
         self._build_page3(doc, charts, current_stats, history)
         self._build_page4(doc, charts, current_stats, history)
         self._build_page5(doc, charts, current_stats)
+        self._build_non_kpi_page(doc, current_stats)
         self._build_last_page(doc, current_stats)
 
         reports_dir = os.path.normpath(
@@ -487,13 +495,139 @@ class MatplotlibDocxGenerator:
         self._add_doctor_specialty_table(doc, specialties)
 
     # =========================================================================
+    # NON-KPI PAGE  (deaths within 24 hours — excluded from indicator)
+    # =========================================================================
+
+    def _build_non_kpi_page(self, doc, stats):
+        non_kpi = stats.get('non_kpi_deaths', [])
+        doc.add_page_break()
+        self._add_spacer(doc, space_before=6)
+
+        # Title row
+        self._add_titled_row(
+            doc,
+            'وفيات لا تدخل ضمن هذا المؤشر لانها حصلت خلال 24 ساعة',
+            shade=SHADE_HEADER,
+            border=BORDER_MEDIUM,
+        )
+        self._add_spacer(doc, space_before=6)
+
+        if not non_kpi:
+            p = doc.add_paragraph()
+            r = p.add_run('لا توجد وفيات خلال 24 ساعة')
+            r.font.name = FONT
+            r.font.size = Pt(11)
+            self._set_rtl(p)
+            self._zero_spacing(p)
+            return
+
+        # 11 columns — Arabic headers matching Excel column names
+        # الإقامة uses length_of_stay_original to preserve the raw Excel value
+        COLS = [
+            ('رقم الملف',                                  'file_number'),
+            ('إسم المريض',                                 'patient_name'),
+            ('العمر',                                      'age'),
+            ('وجهة الدخول',                               'admission_source'),
+            ('تاريخ الدخول',                               'admission_date'),
+            ('تاريخ الوفاة',                               'death_date'),
+            ('التشخيص للسبب الذي نجم عنه الوفاة',         'underlying_cause_of_death'),
+            ('القسم التمريضي',                             'nursing_department'),
+            ('الإختصاص',                                   'specialty'),
+            ('الطبيب المعالج',                             'treating_doctor'),
+            ('الإقامة',                                    'length_of_stay_original'),
+        ]
+        n_cols = len(COLS)
+        n_rows = len(non_kpi) + 1  # header + data
+
+        table = doc.add_table(rows=n_rows, cols=n_cols)
+        table.autofit = False
+        self._set_table_cell_margins(table, top=10, bottom=10, left=12, right=12)
+        self._set_table_rtl(table)
+
+        # Column widths — total exactly 6.87 in to fit inside page border
+        col_widths = [
+            Inches(0.52),  # رقم الملف
+            Inches(0.92),  # إسم المريض
+            Inches(0.33),  # العمر
+            Inches(0.55),  # وجهة الدخول
+            Inches(0.60),  # تاريخ الدخول
+            Inches(0.60),  # تاريخ الوفاة
+            Inches(1.25),  # التشخيص
+            Inches(0.55),  # القسم التمريضي
+            Inches(0.52),  # الإختصاص
+            Inches(0.60),  # الطبيب المعالج
+            Inches(0.43),  # الإقامة
+        ]
+
+        # Header row — light gold (SHADE_HEADER) matching document style
+        self._shade_row_cells(table.rows[0].cells, SHADE_HEADER)
+        for j, (hdr, _) in enumerate(COLS):
+            self._style_cell_text(table.cell(0, j), hdr, FONT, 8, bold=True, rtl=True, align='center')
+            self._set_cell_border(table.cell(0, j),
+                                  top=BORDER_FINE, bottom=BORDER_FINE,
+                                  left=BORDER_FINE, right=BORDER_FINE)
+
+        # Data rows
+        DATE_FIELDS = {'admission_date', 'death_date'}
+
+        def _fmt_date(s):
+            """Convert ISO date string to DD/MM/YYYY without time component."""
+            import re as _re
+            m = _re.match(r'(\d{4})-(\d{2})-(\d{2})', s)
+            return f"{m.group(3)}/{m.group(2)}/{m.group(1)}" if m else s
+
+        for i, rec in enumerate(non_kpi):
+            row_idx = i + 1
+            if i % 2 == 1:
+                self._shade_row_cells(table.rows[row_idx].cells, SHADE_TOTAL)
+
+            def _val(field, _rec=rec):
+                if field == 'underlying_cause_of_death':
+                    # First mapped occurrence, then any pandas-suffixed duplicates (.1, .2 …)
+                    v = _rec.get('underlying_cause_of_death')
+                    if not v or str(v).strip().lower() in ('nan', 'none', 'nat', ''):
+                        for key in sorted(_rec.keys()):
+                            if 'التشخيص للسبب الذي نجم عنه الوفاة' in str(key):
+                                candidate = _rec[key]
+                                if candidate and str(candidate).strip().lower() not in ('nan', 'none', 'nat', ''):
+                                    v = candidate
+                                    break
+                else:
+                    v = _rec.get(field)
+                if v is None or (isinstance(v, float) and v != v):
+                    return '—'
+                s = str(v).strip()
+                if not s or s.lower() in ('nan', 'none', 'nat'):
+                    return '—'
+                if field in DATE_FIELDS:
+                    s = _fmt_date(s)
+                return s
+
+            values = [_val(field) for _, field in COLS]
+
+            for j, val in enumerate(values):
+                is_ar = any('؀' <= c <= 'ۿ' for c in val)
+                font  = FONT if is_ar else FONT_EN
+                self._style_cell_text(table.cell(row_idx, j), val, font, 8,
+                                      rtl=is_ar, align='center')
+                self._set_cell_border(table.cell(row_idx, j),
+                                      top=BORDER_FINE, bottom=BORDER_FINE,
+                                      left=BORDER_FINE, right=BORDER_FINE)
+
+        # Apply widths
+        for row in table.rows:
+            for j, w in enumerate(col_widths):
+                row.cells[j].width = w
+
+    # =========================================================================
     # LAST PAGE
     # =========================================================================
 
     def _build_last_page(self, doc, stats=None):
         stats = stats or {}
+        from app.config import load_targets as _load_targets
         rate   = float(stats.get('mortality_rate', 0) or 0)
-        target = float((stats.get('mortality_metrics') or {}).get('target', 2.0) or 2.0)
+        target = float(_load_targets().get('mortality', {}).get('rate', 2.0) or 2.0)
         result_text = "مشجعة" if rate < target else "غير مشجعة"
 
         doc.add_page_break()
@@ -747,8 +881,9 @@ class MatplotlibDocxGenerator:
         r_en.bold = True
         r_en.underline = True
 
-        # Get data for analysis
-        target_rate = float(stats.get('mortality_metrics', {}).get('target', 2.0) or 2.0)
+        # Get data for analysis — read target from config (mortality_metrics has no 'target' key)
+        from app.config import load_targets as _load_targets
+        target_rate = float(_load_targets().get('mortality', {}).get('rate', 2.0) or 2.0)
         prev = history[-1] if history else {}
         prev_rate = prev.get('rate', 0)
         prev_deaths = prev.get('deaths', 0)
@@ -792,7 +927,7 @@ class MatplotlibDocxGenerator:
         # Chart section
         if 'chart1' in charts:
             p3 = cell.add_paragraph()
-            run = p3.add_run("Inpatient mortality rate\nT<2%")
+            run = p3.add_run(f"Inpatient mortality rate\nT<{target_rate:.1f}%")
             run.font.name = FONT_EN
             run.font.size = Pt(11)
             run.bold = True

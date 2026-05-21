@@ -98,7 +98,8 @@ class MatplotlibChartGenerator:
 
         # Ensure rates are in percentage form (e.g. 1.79 not 0.0179)
         result_rates = [r * 100 if r < 1 else r for r in result_rates]
-        target_rate = 2.0
+        from app.config import load_targets
+        target_rate = load_targets().get('mortality', {}).get('rate', 2.0)
 
         fig, ax = plt.subplots(figsize=(16, 8))
         fig.patch.set_facecolor('white')
@@ -119,10 +120,10 @@ class MatplotlibChartGenerator:
                     fontsize=14, fontweight='bold', color='#333333')
 
         # Target annotation
-        ax.text(len(quarters) / 2, target_rate + 0.35, 'T<2%', ha='center', va='center',
+        ax.text(len(quarters) / 2, target_rate + 0.35, f'T<{target_rate}%', ha='center', va='center',
                 fontsize=28, fontweight='bold', color='#333333')
 
-        ax.set_title(self.ar('معدل الوفيات في المستشفيات'),
+        ax.set_title(self.ar('معدل الوفيات في المستشفيات') + f'\nT<{target_rate}%',
                     fontsize=24, fontweight='bold', pad=20, color='#000000')
 
         max_rate = max(result_rates) if result_rates else 3.0
@@ -324,17 +325,15 @@ class MatplotlibChartGenerator:
         age_groups_ar = ['اقل من 5 سنوات', 'من 5 الى 15 سنة', 'من 16 الى 30 سنة', 'من 31 الى 50 سنة',
                         'من 51 الى 60 سنة', 'من 61 الى 70 سنة', 'من 71 الى 80 سنة', 'اكثر من 81 سنة']
 
-        # Use age_categories (from تصنيف العمر column, KPI=YES filtered)
+        # Build a label→count map (age_categories preferred; fallback to age_groups)
         age_cats = current_stats.get('demographics', {}).get('age_categories', [])
         if age_cats:
-            # age_categories is already ordered by standard_labels matching age_groups_ar
-            values = [ag.get('count', 0) for ag in age_cats[:8]]
+            counts_map = {ag['group']: ag.get('count', 0) for ag in age_cats}
         else:
-            # Fallback to age_groups
-            age_groups = current_stats.get('demographics', {}).get('age_groups', [])
-            values = [ag.get('count', 0) for ag in age_groups[:8]]
-        if len(values) < 8:
-            values = [0] * 8
+            raw = current_stats.get('demographics', {}).get('age_groups', [])
+            counts_map = {ag.get('group', ag.get('name', '')): ag.get('count', 0) for ag in raw}
+        # Always 8 values in standard order; missing groups → 0
+        values = [counts_map.get(label, 0) for label in age_groups_ar]
         
         fig, ax = plt.subplots(figsize=(12, 5), facecolor="white")
         y = np.arange(len(age_groups_ar))
@@ -380,16 +379,14 @@ class MatplotlibChartGenerator:
 
         defaults = [0] * 8
 
-        # Build current quarter's age_groups from age_categories
+        # Build current quarter's age_groups from age_categories (label-matched, always 8 values)
         age_cats = current_stats.get('demographics', {}).get('age_categories', [])
         if age_cats:
-            current_age_groups = [ag.get('count', 0) for ag in age_cats[:8]]
-            if len(current_age_groups) < 8:
-                current_age_groups.extend([0] * (8 - len(current_age_groups)))
+            cm = {ag['group']: ag.get('count', 0) for ag in age_cats}
         else:
-            current_age_groups = [ag.get('count', 0) for ag in current_stats.get('demographics', {}).get('age_groups', [])][:8]
-            if len(current_age_groups) < 8:
-                current_age_groups = defaults
+            raw = current_stats.get('demographics', {}).get('age_groups', [])
+            cm = {ag.get('group', ag.get('name', '')): ag.get('count', 0) for ag in raw}
+        current_age_groups = [cm.get(label, 0) for label in age_groups]
 
         # Append current quarter to history for this chart
         current_entry = {
@@ -506,20 +503,28 @@ class MatplotlibChartGenerator:
             ax.pie(sizes, colors=colors_side, startangle=90, counterclock=False,
                   radius=1.0, center=(0, -k*0.014), wedgeprops=dict(edgecolor='none'))
         
-        # Top pie
-        wedges, _, autotexts = ax.pie(sizes, colors=colors_top, startangle=90,
-                                       autopct=lambda p: f'{p:.0f}%' if p >= 1 else '',
-                                       pctdistance=0.55, wedgeprops=dict(edgecolor='white', linewidth=1.2))
-        
-        for t in autotexts:
-            t.set_fontsize(24)
-            t.set_fontweight('bold')
-            t.set_color('#333333')
-        
-        # Position labels
-        autotexts[0].set_position((1.45 * np.cos(np.deg2rad(78)), 1.15 * np.sin(np.deg2rad(78))))
-        autotexts[2].set_position((-1.45 * np.cos(np.deg2rad(78)), 1.15 * np.sin(np.deg2rad(78))))
-        autotexts[1].set_position((0.0, -0.25))
+        # Top pie — no autopct; we draw labels dynamically below
+        wedges, _ = ax.pie(sizes, colors=colors_top, startangle=90, counterclock=False,
+                           wedgeprops=dict(edgecolor='white', linewidth=1.2))
+
+        # Add percentage labels: inside for large slices, annotated outside for small ones
+        for wedge, size in zip(wedges, sizes):
+            angle = (wedge.theta1 + wedge.theta2) / 2
+            rad   = np.deg2rad(angle)
+            cx, cy = np.cos(rad), np.sin(rad)
+            if size < 5:
+                ax.annotate(
+                    f'{size}%',
+                    xy=(0.75 * cx, 0.75 * cy),
+                    xytext=(1.45 * cx, 1.45 * cy),
+                    ha='center', va='center',
+                    fontsize=18, fontweight='bold', color='#333333',
+                    arrowprops=dict(arrowstyle='-', color='#888888', lw=1.2),
+                )
+            else:
+                ax.text(0.55 * cx, 0.55 * cy, f'{size}%',
+                        ha='center', va='center',
+                        fontsize=24, fontweight='bold', color='#333333')
 
         legend_handles = [mpatches.Patch(facecolor=c) for c in colors_top]
         ax.legend(legend_handles, labels,
@@ -621,7 +626,7 @@ class MatplotlibChartGenerator:
         ax.set_title(self.ar('مقارنة الوفيات بحسب الأقسام'), fontsize=22, pad=25, color='#555555')
         ax.set_ylim(0, max_val + 8)
         ax.set_xticks(x)
-        ax.set_xticklabels(depts, rotation=45, ha='right', fontsize=13)
+        ax.set_xticklabels([self.ar(d) for d in depts], rotation=45, ha='right', fontsize=13)
         ax.grid(True, axis='y', linestyle='-', linewidth=0.6, color='#CCCCCC', alpha=0.5, zorder=1)
 
         ax.spines['top'].set_visible(False)

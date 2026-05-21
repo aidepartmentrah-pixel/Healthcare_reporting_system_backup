@@ -9,17 +9,23 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from loguru import logger
 
-STANDARD_FLOORS = ["ICU", "CCU", "CSU", "Ped", "ICN", "ITU", "Neonatal"]
+STANDARD_FLOORS = ["ICU", "CCU", "CSU", "Ped", "ICN", "ITU"]
 
 FLOOR_TARGETS = {
-    "ICU":      25.0,
-    "CCU":      15.0,
-    "CSU":       9.5,
-    "Ped":       5.5,
-    "ICN":      10.0,
-    "ITU":      25.0,
-    "Neonatal":  0.0,
+    "ICU":  25.0,
+    "CCU":  15.0,
+    "CSU":   9.5,
+    "Ped":   5.5,
+    "ICN":  10.0,
+    "ITU":  25.0,
 }
+
+
+def get_vap_targets() -> dict:
+    """Return live VAP targets from config JSON."""
+    from app.config import load_targets
+    return load_targets().get("vap", FLOOR_TARGETS)
+
 
 HISTORY_PATH = Path("storage/data/VAP_history.json")
 CURRENT_PATH = Path("storage/data/VAP_current.json")
@@ -146,14 +152,14 @@ class VAPHistory:
 
         floor_stats = stats.get("floor_stats", {})
 
-        # summary — floor-keyed, no target (matches CLABSI/CAUTI format)
+        # summary — keyed by whichever floors were actually in this upload
         summary_entry = {
             floor: {
-                "cases":           floor_stats.get(floor, {}).get("cases", 0),
-                "ventilator_days": floor_stats.get(floor, {}).get("ventilator_days", 0),
-                "rate":            floor_stats.get(floor, {}).get("rate", 0.0),
+                "cases":           data.get("cases", 0),
+                "ventilator_days": data.get("ventilator_days", 0),
+                "rate":            data.get("rate", 0.0),
             }
-            for floor in STANDARD_FLOORS
+            for floor, data in floor_stats.items()
         }
 
         # germs_distribution — flat {floor: {germ: count}} matching CLABSI/CAUTI

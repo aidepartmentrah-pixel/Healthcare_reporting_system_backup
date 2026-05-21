@@ -1152,7 +1152,7 @@ class InfectionControlDocxGenerator:
                 elif col_idx == 4: return _v(case, 'date_of_intubation')
                 elif col_idx == 5: return _v(case, 'date_of_admission')
                 elif col_idx == 6: return _v(case, 'diagnosis')
-                elif col_idx == 7: return _v(case, 'nb_of_cases')
+                elif col_idx == 7: return _v(case, 'case_number', 'nb_of_cases')
             else:
                 if   col_idx == 0: return self._get_risk_factors(case)
                 elif col_idx == 1: return _v(case, 'age_display', 'Age/Year', 'Age')
@@ -1161,7 +1161,7 @@ class InfectionControlDocxGenerator:
                 elif col_idx == 4: return _v(case, 'date_of_insertion')
                 elif col_idx == 5: return _v(case, 'date_of_admission', 'Date of admission')
                 elif col_idx == 6: return _v(case, 'diagnosis', 'Diagnosis')
-                elif col_idx == 7: return _v(case, 'nb_of_cases', 'Nb of cases')
+                elif col_idx == 7: return _v(case, 'case_number', 'nb_of_cases', 'Nb of cases')
             return '—'
 
         # Data rows

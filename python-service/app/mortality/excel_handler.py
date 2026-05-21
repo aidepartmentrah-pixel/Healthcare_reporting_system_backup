@@ -29,8 +29,14 @@ class ExcelHandler:
             wb = openpyxl.load_workbook(file_path, data_only=True)
             logger.info(f"📚 Found {len(wb.sheetnames)} sheets: {', '.join(wb.sheetnames)}")
             
-            # Parse main data (first sheet)
-            main_sheet = wb.worksheets[0]
+            # Parse main data — prefer 'دفتر الوفيات العام' sheet, fall back to first sheet
+            TARGET_SHEET = 'دفتر الوفيات العام'
+            if TARGET_SHEET in wb.sheetnames:
+                main_sheet = wb[TARGET_SHEET]
+                logger.info(f"📄 Using sheet '{TARGET_SHEET}'")
+            else:
+                main_sheet = wb.worksheets[0]
+                logger.info(f"📄 Sheet '{TARGET_SHEET}' not found — using first sheet: '{main_sheet.title}'")
             df = self._parse_main_sheet(main_sheet)
             
             # Parse WHO categories (Sheet4 if exists)

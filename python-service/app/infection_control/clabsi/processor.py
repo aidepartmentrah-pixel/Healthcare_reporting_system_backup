@@ -29,11 +29,16 @@ COL_MAP: Dict[str, str] = {
     "semester":                        "semester",
     "type of infection":               "type_of_infection",
     "floor":                           "floor",
+    "case number":                     "case_number",
     "nb of cases":                     "nb_of_cases",
     "age/year":                        "age",
     "diagnosis":                       "diagnosis",
     "date of admission":               "date_of_admission",
     "date of insertion central line":  "date_of_insertion",
+    "date of /intubation /insertion":  "date_of_insertion",
+    "date of intubation/insertion":    "date_of_insertion",
+    "date of intubation / insertion":  "date_of_insertion",
+    "تاريخ التنبيب":                   "date_of_insertion",
     "date of infection":               "date_of_infection",
     "germs":                           "germs",
     "type of line":                    "type_of_line",
@@ -212,6 +217,9 @@ def process_clabsi_excel(file_path: str, year: int, quarter: int, denominators: 
         if mapped:
             col_index[mapped] = idx
 
+    if "case_number" not in col_index and "nb_of_cases" in col_index:
+        col_index["case_number"] = col_index["nb_of_cases"]
+
     def get(row, field):
         idx = col_index.get(field)
         if idx is None:
@@ -230,6 +238,7 @@ def process_clabsi_excel(file_path: str, year: int, quarter: int, denominators: 
         age       = _parse_age(get(r, "age"))
 
         case: Dict = {
+            "case_number":       get(r, "case_number"),
             "nb_of_cases":       get(r, "nb_of_cases"),
             "year":              get(r, "year") or year,
             "semester":          get(r, "semester"),

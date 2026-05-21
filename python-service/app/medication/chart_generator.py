@@ -8,6 +8,11 @@ import matplotlib
 import numpy as np
 import textwrap
 from typing import Dict, List
+from app.config import load_targets
+
+
+def _med_target() -> float:
+    return load_targets().get("medication", {}).get("error_rate", 0.03)
 from pathlib import Path
 from loguru import logger
 import io
@@ -32,7 +37,7 @@ class MedicationErrorCharts:
         'light_blue': '#5B9BD5',
     }
 
-    TARGET = 0.03   # T < 0.03 %
+    TARGET = 0.03   # default fallback; overridden at call time from config JSON
 
     def __init__(self, output_dir: str = 'charts'):
         self.output_dir = Path(output_dir)
@@ -96,7 +101,7 @@ class MedicationErrorCharts:
 
         x            = np.arange(len(recent))
         rates        = [h['error_rate'] for h in recent]
-        target_line  = [self.TARGET] * len(recent)
+        target_line  = [_med_target()] * len(recent)
         x_labels     = [self._ar(self._short_quarter(h)) for h in recent]
 
         fig, ax = plt.subplots(figsize=(16, 7))
@@ -124,7 +129,7 @@ class MedicationErrorCharts:
         ax.yaxis.set_label_position('right')
 
         # Y-axis range and ticks
-        y_max   = max(max(rates), self.TARGET) * 1.4
+        y_max   = max(max(rates), _med_target()) * 1.4
         y_ticks = np.arange(0, y_max + 0.005, 0.005)
         ax.set_ylim(0, y_max)
         ax.set_yticks(y_ticks)
@@ -136,7 +141,7 @@ class MedicationErrorCharts:
         ax.set_xticklabels(x_labels, fontsize=9, ha='center')
 
         # Title
-        ax.set_title('Medication Errors\nT<0.03%',
+        ax.set_title(f'Medication Errors\nT<{_med_target():.4f}%',
                      fontsize=16, fontweight='bold', pad=20, color='#333333')
 
         # Grid horizontal only
@@ -234,8 +239,9 @@ class MedicationErrorCharts:
         total  = sum(sizes)
 
         color_order = [self.COLORS['blue'], self.COLORS['orange'],
-                       self.COLORS['yellow'], self.COLORS['green']]
-        colors  = color_order[:len(labels)]
+                       self.COLORS['yellow'], self.COLORS['green'],
+                       self.COLORS['light_blue'], self.COLORS['gray']]
+        colors = [color_order[i % len(color_order)] for i in range(len(labels))]
 
         # Explode the top 2 slices (largest)
         explode = [0.05 if i < 2 else 0 for i in range(len(labels))]
@@ -279,24 +285,27 @@ class MedicationErrorCharts:
         sizes  = [item[1] for item in sorted_items]
         total  = sum(sizes)
 
-        colors = [self.COLORS['light_blue'], self.COLORS['orange'],
-                  self.COLORS['gray']][:len(labels)]
+        _palette = [self.COLORS['light_blue'], self.COLORS['orange'], self.COLORS['gray'],
+                    self.COLORS['blue'], self.COLORS['yellow'], self.COLORS['green']]
+        colors = [_palette[i % len(_palette)] for i in range(len(labels))]
 
         fig, ax = plt.subplots(figsize=(8, 6))
         fig.patch.set_facecolor('white')
 
-        ax.pie(sizes, labels=None, colors=colors,
-               autopct=lambda p: f'{round(p):.0f}%',
-               startangle=90,
-               textprops={'fontsize': 16, 'fontweight': 'bold', 'color': 'white'},
-               wedgeprops={'edgecolor': 'white', 'linewidth': 2, 'width': 0.5},
-               pctdistance=0.75)
+        wedges, _, autotexts = ax.pie(
+            sizes, labels=None, colors=colors,
+            autopct=lambda p: f'{p:.0f}%' if p >= 5 else '',
+            startangle=90,
+            textprops={'fontsize': 13, 'fontweight': 'bold', 'color': 'white'},
+            wedgeprops={'edgecolor': 'white', 'linewidth': 2, 'width': 0.5},
+            pctdistance=0.75,
+        )
 
         # White center hole
         ax.add_artist(plt.Circle((0, 0), 0.50, fc='white'))
 
         pct_labels = [f'{lb}  ({sz} - {round(sz/total*100):.0f}%)' for lb, sz in zip(labels, sizes)]
-        ax.legend(pct_labels, loc='lower center', bbox_to_anchor=(0.5, -0.12),
+        ax.legend(wedges, pct_labels, loc='lower center', bbox_to_anchor=(0.5, -0.12),
                   ncol=3, frameon=False, fontsize=10)
         ax.axis('equal')
         plt.tight_layout()
@@ -318,23 +327,26 @@ class MedicationErrorCharts:
         sizes  = [item[1] for item in sorted_items]
         total  = sum(sizes)
 
-        colors = [self.COLORS['light_blue'], self.COLORS['orange'],
-                  self.COLORS['gray']][:len(labels)]
+        _palette = [self.COLORS['light_blue'], self.COLORS['orange'], self.COLORS['gray'],
+                    self.COLORS['blue'], self.COLORS['yellow'], self.COLORS['green']]
+        colors = [_palette[i % len(_palette)] for i in range(len(labels))]
 
         fig, ax = plt.subplots(figsize=(8, 6))
         fig.patch.set_facecolor('white')
 
-        ax.pie(sizes, labels=None, colors=colors,
-               autopct=lambda p: f'{round(p):.0f}%',
-               startangle=90,
-               textprops={'fontsize': 16, 'fontweight': 'bold', 'color': 'white'},
-               wedgeprops={'edgecolor': 'white', 'linewidth': 2, 'width': 0.5},
-               pctdistance=0.75)
+        wedges, _, autotexts = ax.pie(
+            sizes, labels=None, colors=colors,
+            autopct=lambda p: f'{p:.0f}%' if p >= 5 else '',
+            startangle=90,
+            textprops={'fontsize': 13, 'fontweight': 'bold', 'color': 'white'},
+            wedgeprops={'edgecolor': 'white', 'linewidth': 2, 'width': 0.5},
+            pctdistance=0.75,
+        )
 
         ax.add_artist(plt.Circle((0, 0), 0.50, fc='white'))
 
         pct_labels = [f'{lb}  ({sz} - {round(sz/total*100):.0f}%)' for lb, sz in zip(labels, sizes)]
-        ax.legend(pct_labels, loc='lower center', bbox_to_anchor=(0.5, -0.12),
+        ax.legend(wedges, pct_labels, loc='lower center', bbox_to_anchor=(0.5, -0.12),
                   ncol=3, frameon=False, fontsize=12)
         ax.axis('equal')
         plt.tight_layout()
@@ -356,23 +368,26 @@ class MedicationErrorCharts:
         sizes  = [item[1] for item in sorted_items]
         total  = sum(sizes)
 
-        colors = [self.COLORS['light_blue'], self.COLORS['orange'],
-                  self.COLORS['gray']][:len(labels)]
+        _palette = [self.COLORS['light_blue'], self.COLORS['orange'], self.COLORS['gray'],
+                    self.COLORS['blue'], self.COLORS['yellow'], self.COLORS['green']]
+        colors = [_palette[i % len(_palette)] for i in range(len(labels))]
 
         fig, ax = plt.subplots(figsize=(8, 6))
         fig.patch.set_facecolor('white')
 
-        ax.pie(sizes, labels=None, colors=colors,
-               autopct=lambda p: f'{round(p):.0f}%',
-               startangle=90,
-               textprops={'fontsize': 16, 'fontweight': 'bold', 'color': 'white'},
-               wedgeprops={'edgecolor': 'white', 'linewidth': 2, 'width': 0.5},
-               pctdistance=0.75)
+        wedges, _, autotexts = ax.pie(
+            sizes, labels=None, colors=colors,
+            autopct=lambda p: f'{p:.0f}%' if p >= 5 else '',
+            startangle=90,
+            textprops={'fontsize': 13, 'fontweight': 'bold', 'color': 'white'},
+            wedgeprops={'edgecolor': 'white', 'linewidth': 2, 'width': 0.5},
+            pctdistance=0.75,
+        )
 
         ax.add_artist(plt.Circle((0, 0), 0.50, fc='white'))
 
         pct_labels = [f'{lb}  ({sz} - {round(sz/total*100):.0f}%)' for lb, sz in zip(labels, sizes)]
-        ax.legend(pct_labels, loc='lower center', bbox_to_anchor=(0.5, -0.12),
+        ax.legend(wedges, pct_labels, loc='lower center', bbox_to_anchor=(0.5, -0.12),
                   ncol=3, frameon=False, fontsize=11)
         ax.axis('equal')
         plt.tight_layout()
@@ -381,64 +396,60 @@ class MedicationErrorCharts:
     # ── Chart 7: Contributing Factors (vertical bars) ─────────────────────────
 
     def generate_causes_bars(self, causes_data: Dict) -> io.BytesIO:
-        """Vertical blue bars with % labels on top. Matches notebook chart."""
+        """Horizontal bars — causes on y-axis so long names never overlap."""
         logger.info("Chart 7: Causes bars...")
 
         counts      = causes_data.get('counts', {})
         percentages = causes_data.get('percentages', {})
 
         if not counts:
-            counts      = {'Work flow\ndisruption': 38, 'Medication\nknowledge\nDeficiency': 29,
-                           'Non\nadherence to\nguidelines': 20, 'Non\ncompetent\nemployee': 9,
-                           'Non-treatment\nprotocol\ndeviation': 2, 'Monitoring': 2}
+            counts      = {'Work flow disruption': 38, 'Medication knowledge Deficiency': 29,
+                           'Non adherence to guidelines': 20, 'Non competent employee': 9,
+                           'Non-treatment protocol deviation': 2, 'Monitoring': 2}
             percentages = counts
 
-        items    = list(counts.items())[:6]
-        labels   = [item[0] for item in items]
+        # Sort descending so the largest bar is at the top
+        sorted_items = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+        labels   = [item[0] for item in sorted_items]
         values   = [percentages.get(lb, 0) for lb in labels]
 
-        # Wrap long labels at 18 chars so they don't overlap
-        wrapped_labels = ['\n'.join(textwrap.wrap(lb, width=18)) for lb in labels]
-
-        fig, ax = plt.subplots(figsize=(13, 7))
+        n    = len(labels)
+        # Scale figure height with number of bars so labels never crowd
+        fig_h = max(5, n * 0.55 + 1.5)
+        fig, ax = plt.subplots(figsize=(12, fig_h))
         fig.patch.set_facecolor('white')
         ax.set_facecolor('white')
 
-        x    = np.arange(len(labels))
-        bars = ax.bar(x, values, width=0.55,
-                      color=self.COLORS['blue'],
-                      edgecolor='white', linewidth=1)
+        y    = np.arange(n)
+        bars = ax.barh(y, values, height=0.55,
+                       color=self.COLORS['blue'],
+                       edgecolor='white', linewidth=1)
 
-        # Labels on top
+        # % label at the end of each bar
         for bar, val in zip(bars, values):
-            ax.text(bar.get_x() + bar.get_width() / 2., bar.get_height() + 0.5,
-                    f'{val:.0f}%', ha='center', va='bottom',
-                    fontsize=12, fontweight='bold')
+            ax.text(bar.get_width() + 0.3, bar.get_y() + bar.get_height() / 2,
+                    f'{val:.0f}%', va='center', ha='left',
+                    fontsize=11, fontweight='bold', color='#333333')
 
-        # Y-axis
-        ax.set_ylim(0, max(values) * 1.25)
-        ax.set_yticks(range(0, int(max(values) * 1.25) + 5, 5))
-        ax.set_yticklabels([f'{y}%' for y in range(0, int(max(values) * 1.25) + 5, 5)])
+        ax.set_yticks(y)
+        ax.set_yticklabels(labels, fontsize=10)
+        ax.invert_yaxis()   # largest bar on top
 
-        # X-axis — wrapped labels, extra bottom margin for multi-line
-        ax.set_xticks(x)
-        ax.set_xticklabels(wrapped_labels, fontsize=10, ha='center', linespacing=1.4)
+        ax.set_xlim(0, max(values) * 1.2)
+        ax.xaxis.set_visible(False)
 
-        # Grid
-        ax.grid(True, axis='y', linestyle='-', linewidth=0.8,
+        ax.grid(True, axis='x', linestyle='-', linewidth=0.8,
                 color='#E0E0E0', alpha=0.7)
         ax.set_axisbelow(True)
 
-        # Spines
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_color('#CCCCCC')
-        ax.spines['bottom'].set_color('#CCCCCC')
+        ax.spines['bottom'].set_visible(False)
 
-        ax.set_title('Contributing Factors', fontsize=13, fontweight='bold', pad=15)
+        ax.set_title('Contributing Factors', fontsize=13, fontweight='bold', pad=12)
 
         plt.tight_layout()
-        plt.subplots_adjust(bottom=0.25)
         return self._to_buf(fig)
 
     # ── save helper ──────────────────────────────────────────────────────────

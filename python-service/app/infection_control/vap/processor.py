@@ -30,6 +30,10 @@ COL_MAP = {
     "diagnosis":                         "diagnosis",
     "date of admission":                 "date_of_admission",
     "date of intubation":                "date_of_intubation",
+    "date of /intubation /insertion":    "date_of_intubation",
+    "date of intubation/insertion":      "date_of_intubation",
+    "date of intubation / insertion":    "date_of_intubation",
+    "تاريخ التنبيب":                     "date_of_intubation",
     "date of infection":                 "date_of_infection",
     "germs":                             "germs",
     "gender":                            "gender",
@@ -260,6 +264,9 @@ def process_vap_sheet(filepath: str,
         mapped = COL_MAP.get(norm)
         if mapped:
             col_index[mapped] = idx
+
+    if "case_number" not in col_index and "nb_of_cases" in col_index:
+        col_index["case_number"] = col_index["nb_of_cases"]
 
     def get(row, field):
         idx = col_index.get(field)

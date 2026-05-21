@@ -97,13 +97,17 @@ class MortalityDataProcessor:
         'الجنس': 'gender',
         'gender': 'gender',
         'الجهة الضامنة': 'insurance',
-        'الإقامة': 'los',
+        'الإقامة': 'length_of_stay',
 
         # Stay duration
         'los': 'length_of_stay',
 
         # Other
         'رقم السجل': 'record_number',
+        'رقم الملف': 'file_number',
+        'إسم المريض': 'patient_name',
+        'اسم المريض': 'patient_name',
+        'الطبيب المعالج': 'treating_doctor',
         'include kpi': 'include_kpi'
     }
     
@@ -161,7 +165,13 @@ class MortalityDataProcessor:
         # 5b. Calculate LOS from dates if column is missing
         df = self._calculate_los_if_missing(df)
 
-        # 6. Clean stay duration text (الإقامة) and fix LOS
+        # 6. Preserve original الإقامة text before numeric conversion
+        if 'length_of_stay' in df.columns:
+            df['length_of_stay_original'] = df['length_of_stay'].apply(
+                lambda x: str(x).strip() if pd.notna(x) else None
+            )
+
+        # 6b. Clean stay duration text (الإقامة) and fix LOS
         df = self._clean_stay_duration(df)
 
         # 7. Clean and validate KPI
@@ -386,74 +396,45 @@ class MortalityDataProcessor:
         logger.info(f"📊 Calculated LOS for {calculated}/{len(df)} records")
         return df
 
+    def _parse_los_value(self, val):
+        """Parse one الإقامة cell.
+        Plain number → days (returned as-is).
+        Contains ساعة / ساعات / hour / hours / hr / hrs, or ends with 'h' → hours, converted to days (÷24).
+        """
+        import re as _re
+        if val is None:
+            return None
+        if isinstance(val, (int, float)):
+            v = float(val)
+            return None if np.isnan(v) else v
+        s = str(val).strip()
+        if not s or s.lower() in ('nan', 'none', ''):
+            return None
+        try:
+            return float(s)
+        except ValueError:
+            pass
+        is_hours = (
+            'ساعة' in s or 'ساعات' in s or
+            'hour' in s.lower() or 'hr' in s.lower() or
+            s.lower().endswith('h')
+        )
+        nums = _re.findall(r'\d+\.?\d*', s)
+        if nums:
+            num = float(nums[0])
+            return num / 24.0 if is_hours else num
+        return None
+
     def _clean_stay_duration(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Clean الإقامة (residence/stay duration text) and validate LOS
-        Extract numeric days from text like "5 أيام", "يومان", "3"
-        Also fix LOS=0 when hours are specified
-        """
-        if 'residence' not in df.columns:
+        """Parse الإقامة (length_of_stay): plain number = days, contains ساعة/hour/h = hours → ÷24 → days."""
+        if 'length_of_stay' not in df.columns:
             return df
 
-        import re
-
-        # Arabic number words mapping
-        arabic_numbers = {
-            'يوم': 1, 'يومان': 2, 'يومين': 2,
-            'ثلاثة': 3, 'أربعة': 4, 'خمسة': 5,
-            'ستة': 6, 'سبعة': 7, 'ثمانية': 8,
-            'تسعة': 9, 'عشرة': 10
-        }
-
-        def extract_days_and_hours(text):
-            """Extract numeric days/hours from Arabic text"""
-            if pd.isna(text) or text == 'nan':
-                return None, None
-
-            text = str(text).strip()
-
-            # Check if text contains hours (ساعة or ساعات)
-            if 'ساعة' in text or 'ساعات' in text:
-                # Extract hours
-                numbers = re.findall(r'\d+', text)
-                if numbers:
-                    hours = int(numbers[0])
-                    return None, hours  # Return as hours
-
-            # Otherwise extract days
-            numbers = re.findall(r'\d+', text)
-            if numbers:
-                return int(numbers[0]), None
-
-            # Check for Arabic number words
-            for word, value in arabic_numbers.items():
-                if word in text:
-                    return value, None
-
-            return None, None
-
-        # Extract days and hours from residence text
-        df['stay_duration_days'] = None
-        df['stay_duration_hours'] = None
-
-        for idx, row in df.iterrows():
-            days, hours = extract_days_and_hours(row['residence'])
-            if days is not None:
-                df.at[idx, 'stay_duration_days'] = days
-            if hours is not None:
-                df.at[idx, 'stay_duration_hours'] = hours
-
-        # Fix LOS=0 when hours are specified
-        if 'length_of_stay' in df.columns:
-            for idx, row in df.iterrows():
-                if row['length_of_stay'] == 0 and pd.notna(row.get('stay_duration_hours')):
-                    # Convert hours to fractional days
-                    hours = row['stay_duration_hours']
-                    df.at[idx, 'length_of_stay'] = hours / 24.0
-                    logger.debug(f"📊 Fixed LOS for row {idx}: {hours} hours → {hours/24.0:.3f} days")
-
-        extracted = df['stay_duration_days'].notna().sum()
-        logger.debug(f"📊 Extracted {extracted} stay durations from text")
+        parsed = df['length_of_stay'].apply(self._parse_los_value)
+        changed = parsed.notna() & (parsed != df['length_of_stay'])
+        if changed.any():
+            logger.info(f"📊 Parsed {changed.sum()} الإقامة text values into fractional days")
+        df['length_of_stay'] = parsed
 
         return df
 
@@ -502,12 +483,12 @@ class MortalityDataProcessor:
         if len(violations) > 0:
             for idx, row in violations.iterrows():
                 patient_id = row.get('patient_id', row.get('record_number', idx))
-                los = row['length_of_stay']
+                los = float(row['length_of_stay'])
                 corrections.append({
                     'row': int(idx) + 2,
                     'patient_id': str(patient_id),
-                    'los_days': round(float(los), 2),
-                    'los_hours': round(float(los) * 24, 1),
+                    'los_days': round(los, 2),
+                    'los_hours': round(los * 24, 1),
                 })
                 df.at[idx, 'include_kpi'] = 'NO'
                 logger.warning(

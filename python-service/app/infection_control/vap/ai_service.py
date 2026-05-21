@@ -28,7 +28,7 @@ except ImportError:
 
 FLOOR_TARGETS = {
     "ICU": 25.0, "CCU": 15.0, "CSU": 9.5,
-    "Ped": 5.5,  "ICN": 10.0, "ITU": 25.0, "Neonatal": 0.0,
+    "Ped": 5.5,  "ICN": 10.0, "ITU": 25.0,
 }
 
 

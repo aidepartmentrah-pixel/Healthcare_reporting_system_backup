@@ -13,6 +13,7 @@ A comprehensive hospital reporting platform with **five integrated modules**: Mo
   - [VAP Infection Control](#3-vap-ventilator-associated-pneumonia)
   - [CLABSI Infection Control](#4-clabsi-central-line-associated-bloodstream-infection)
   - [CAUTI Infection Control](#5-cauti-catheter-associated-urinary-tract-infection)
+- [Admin Panel](#admin-panel)
 - [Tech Stack](#tech-stack)
 - [Architecture Overview](#architecture-overview)
 - [Project Structure](#project-structure)
@@ -26,6 +27,7 @@ A comprehensive hospital reporting platform with **five integrated modules**: Mo
 - [Running the System](#running-the-system)
 - [Local Deployment (Production)](#local-deployment-production)
 - [Usage Guide](#usage-guide)
+  - [Admin Panel](#admin-panel-1)
 
 ---
 
@@ -152,6 +154,47 @@ Tracks urinary catheter infections per 1000 urinary catheter days across departm
 - Case detail table (same shared component as CLABSI)
 
 > **Note:** CAUTI uses the **same shared infrastructure** as CLABSI — shared processor, shared statistics engine (`InfectionControlStatistics`), shared docx generator (`ic_docx_generator.py`), shared chart generator, and shared frontend pages — configured by a type parameter.
+
+---
+
+## Admin Panel
+
+The Admin Panel lets authorized users change KPI target values for all modules and update the admin login credentials — without touching any config files or restarting the server.
+
+**Access:** Navigate to `/admin` in the browser (e.g. `http://localhost:3000/admin`).
+
+### Default Credentials
+
+| Field | Default value |
+|-------|--------------|
+| Username | `admin` |
+| Password | `admin123` |
+
+> Change these immediately after first login using the **Change Credentials** form.
+
+### What you can do
+
+| Action | Description |
+|--------|-------------|
+| **Edit targets** | Update the KPI target rates for Mortality, Medication Error, VAP, CLABSI, and CAUTI. Changes take effect immediately across all dashboards. |
+| **Change credentials** | Set a new admin username and password. All active sessions are invalidated and you must log in again with the new credentials. |
+
+### Default Target Values
+
+| Module | Field | Default |
+|--------|-------|---------|
+| Mortality | Mortality Rate | 2.0 % |
+| Medication Error | Error Rate | 0.03 % |
+| VAP | Per-floor target rates | ICU 25‰ · CCU 15‰ · CSU 9.5‰ · Ped 5.5‰ · ICN 10‰ · ITU 25‰ · Neonatal 0‰ |
+| CLABSI | Per-floor target rates | Same as VAP floor list |
+| CAUTI | Per-floor target rates | Same as VAP floor list |
+
+### How it works
+
+- Targets are stored in `python-service/storage/config/targets.json` and loaded by dashboards on every visit.
+- Admin credentials are stored as a salted PBKDF2-SHA256 hash in `python-service/storage/config/admin.json` — the plaintext password is never stored.
+- Login issues a short-lived in-memory Bearer token. The token is lost on server restart, requiring a fresh login.
+- Changing credentials immediately invalidates all active sessions.
 
 ---
 
@@ -765,6 +808,16 @@ All endpoints documented interactively at **http://localhost:8000/docs** (Swagge
 | `GET` | `/api/cauti/download-report?fileName=...` | Download generated .docx |
 | `DELETE` | `/api/cauti/history/{year}/{quarter}` | Delete a specific quarter |
 
+### Admin
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/admin/login` | — | Validate credentials, return session token |
+| `POST` | `/api/admin/logout` | Bearer token | Invalidate current session token |
+| `GET` | `/api/admin/targets` | — | Get all target values (public — used by dashboards) |
+| `PUT` | `/api/admin/targets` | Bearer token | Update target values for one or more modules |
+| `PUT` | `/api/admin/credentials` | Bearer token | Change admin username and password |
+
 ---
 
 ## Installation
@@ -868,7 +921,7 @@ npm run dev
 ---
 
 ## Local Deployment (Production)
-
+ 
 For deploying on a local server so the entire hospital network can access it — without Docker.
 
 ### Step 1 — Build the React Frontend
@@ -1081,6 +1134,15 @@ nginx (static files + reverse proxy)
 2. Select quarter and year, enter urinary catheter days per floor, upload Excel
 3. View the **Dashboard** for rate gauges and germ distribution
 4. Navigate to **Reports** → click **Generate Report** → download
+
+### Admin Panel
+
+1. Navigate to `http://localhost:3000/admin`
+2. Log in with the admin credentials (default: `admin` / `admin123`)
+3. **To update targets:** Edit the target values for any module in the **Target Values** section, then click **Save Targets**. Changes apply immediately to all dashboards.
+4. **To change credentials:** Fill in the **New Username**, **New Password**, and **Confirm Password** fields in the **Change Credentials** section, then click **Update Credentials**. You will be logged out automatically and must sign in with the new credentials.
+
+> For production deployments, change the default credentials on first login.
 
 ---
 

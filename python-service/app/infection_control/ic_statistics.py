@@ -12,6 +12,7 @@ Usage:
     result = stats.calculate_all_statistics(cases, floor_days, quarter=4, year=2025)
 """
 
+import io
 from typing import Dict, List, Optional
 
 # ── Risk factor columns (snake_case — must match processor case dict keys) ────
@@ -47,6 +48,60 @@ CONFIGS: Dict[str, Dict] = {
     "cauti":  {"days_key": "urinary_catheter_days"},
     "vap":    {"days_key": "ventilator_days"},
 }
+
+
+def get_floors_from_excel(file_bytes: bytes, ic_type: str = None, quarter: int = 0) -> list:
+    """
+    Extract unique floor names from any IC Excel file.
+    ic_type : filter by 'Type of IC' column (e.g. 'VAP', 'CAUTI', 'CLABSI')
+    quarter : if > 0, also filter rows by the 'Semester' column (int 1-4)
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        return []
+    try:
+        xl = pd.ExcelFile(io.BytesIO(file_bytes))
+    except Exception:
+        return []
+
+    for sname in xl.sheet_names:
+        try:
+            df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=sname)
+        except Exception:
+            continue
+
+        col_lower = {str(c).strip().lower(): c for c in df.columns}
+        floor_col = col_lower.get('floor')
+        if floor_col is None:
+            continue
+
+        if ic_type:
+            ic_col = next(
+                (c for c in df.columns if str(c).strip().lower() == 'type of ic'), None
+            )
+            if ic_col:
+                df = df[df[ic_col].astype(str).str.strip().str.upper() == ic_type.upper()].copy()
+
+        if quarter:
+            sem_col = col_lower.get('semester')
+            if sem_col:
+                def _sem_match(v):
+                    if v is None:
+                        return True
+                    try:
+                        n = int(float(str(v).strip()))
+                        return 1 <= n <= 4 and n == quarter
+                    except (ValueError, TypeError):
+                        return True  # unparseable → include
+                df = df[df[sem_col].apply(_sem_match)]
+
+        floors = df[floor_col].dropna().astype(str).str.strip()
+        result = sorted({f for f in floors if f and f.lower() not in ('nan', 'none', '')})
+        if result:
+            return result
+
+    return []
 
 
 def _nb(case: dict) -> int:

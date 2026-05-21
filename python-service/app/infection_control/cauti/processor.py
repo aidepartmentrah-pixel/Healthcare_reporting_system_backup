@@ -25,11 +25,16 @@ COL_MAP: Dict[str, str] = {
     "semester":                        "semester",
     "type of infection":               "type_of_infection",
     "floor":                           "floor",
+    "case number":                     "case_number",
     "nb of cases":                     "nb_of_cases",
     "age/year":                        "age",
     "diagnosis":                       "diagnosis",
     "date of admission":               "date_of_admission",
-    "date of foley insertion":         "date_of_insertion",   # CAUTI-specific
+    "date of foley insertion":         "date_of_insertion",
+    "date of /intubation /insertion":  "date_of_insertion",
+    "date of intubation/insertion":    "date_of_insertion",
+    "date of intubation / insertion":  "date_of_insertion",
+    "تاريخ التنبيب":                   "date_of_insertion",
     "date of infection":               "date_of_infection",
     "germs":                           "germs",
     "gender":                          "gender",
@@ -48,6 +53,10 @@ COL_MAP: Dict[str, str] = {
     "cancer":                          "cancer",
     "compromised immune system":       "compromised_immune_system",
     "respiratory pb":                  "respiratory_pb",
+    "site of catheter":                "site_of_catheter_femoral",
+    "site of catheter (femoral)":      "site_of_catheter_femoral",
+    "femoral":                         "site_of_catheter_femoral",
+    "femoral site":                    "site_of_catheter_femoral",
 }
 
 RISK_FACTOR_COLS = [
@@ -56,6 +65,7 @@ RISK_FACTOR_COLS = [
     "cardiac_congenital_malformation", "advanced_age",
     "length_of_stay", "duration_of_catheter",
     "cancer", "compromised_immune_system", "respiratory_pb",
+    "site_of_catheter_femoral",
 ]
 
 
@@ -197,6 +207,9 @@ def process_cauti_excel(file_path: str, year: int, quarter: int, denominators: d
         if mapped:
             col_index[mapped] = idx
 
+    if "case_number" not in col_index and "nb_of_cases" in col_index:
+        col_index["case_number"] = col_index["nb_of_cases"]
+
     def get(row, field):
         idx = col_index.get(field)
         if idx is None:
@@ -214,6 +227,7 @@ def process_cauti_excel(file_path: str, year: int, quarter: int, denominators: d
         age       = _parse_age(get(r, "age"))
 
         case: Dict = {
+            "case_number":       get(r, "case_number"),
             "nb_of_cases":       get(r, "nb_of_cases"),
             "year":              get(r, "year") or year,
             "semester":          get(r, "semester"),

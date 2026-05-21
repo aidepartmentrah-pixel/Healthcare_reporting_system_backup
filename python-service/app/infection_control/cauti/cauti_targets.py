@@ -1,8 +1,11 @@
 """
 CAUTI targets per 1000 urinary catheter days.
+Values are read live from storage/config/targets.json (editable via admin panel).
 """
 
-CAUTI_TARGETS = {
+from app.config import load_targets
+
+_DEFAULTS = {
     "ICU":      4.5,
     "CCU":      4.5,
     "CSU":      4.5,
@@ -12,4 +15,11 @@ CAUTI_TARGETS = {
     "ITU":      4.5,
 }
 
-DEPARTMENTS = list(CAUTI_TARGETS.keys())
+# Static fallback used at import time (e.g. for DEPARTMENTS list)
+CAUTI_TARGETS = _DEFAULTS
+DEPARTMENTS   = list(_DEFAULTS.keys())
+
+
+def get_cauti_targets() -> dict:
+    """Return live CAUTI targets from config JSON."""
+    return load_targets().get("cauti", _DEFAULTS)

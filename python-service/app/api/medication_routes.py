@@ -20,6 +20,88 @@ router = APIRouter()
 # Shared history instance (storage path relative to where the service runs)
 me_history = MedicationErrorHistory('storage/data/medication_error_history.json')
 
+# ─── Semester / quarter filtering ─────────────────────────────────────────────
+
+_QUARTER_TO_NUM = {
+    'الفصل الأول': 1, 'الفصل الاول': 1,
+    'الفصل الثاني': 2,
+    'الفصل الثالث': 3,
+    'الفصل الرابع': 4,
+}
+
+_CELL_TO_NUM = {
+    'الأول': 1, 'الاول': 1, 'أول': 1, 'اول': 1,
+    'الفصل الأول': 1, 'الفصل الاول': 1, 'الفصل 1': 1, 'فصل 1': 1,
+    'الثاني': 2, 'ثاني': 2,
+    'الفصل الثاني': 2, 'الفصل 2': 2, 'فصل 2': 2,
+    'الثالث': 3, 'ثالث': 3,
+    'الفصل الثالث': 3, 'الفصل 3': 3, 'فصل 3': 3,
+    'الرابع': 4, 'رابع': 4,
+    'الفصل الرابع': 4, 'الفصل 4': 4, 'فصل 4': 4,
+    'first': 1, 'one': 1,
+    'second': 2, 'two': 2,
+    'third': 3, 'three': 3,
+    'fourth': 4, 'four': 4,
+    '1': 1, '2': 2, '3': 3, '4': 4,
+    'q1': 1, 'q2': 2, 'q3': 3, 'q4': 4,
+    'q 1': 1, 'q 2': 2, 'q 3': 3, 'q 4': 4,
+    's1': 1, 's2': 2, 's3': 3, 's4': 4,
+    's 1': 1, 's 2': 2, 's 3': 3, 's 4': 4,
+    'semester 1': 1, 'semester 2': 2, 'semester 3': 3, 'semester 4': 4,
+    'quarter 1': 1, 'quarter 2': 2, 'quarter 3': 3, 'quarter 4': 4,
+}
+
+_SEMESTER_COL_NAMES = {'الفصل', 'فصل', 'semester', 'quarter', 'الربع', 'ربع'}
+
+
+def _normalize_cell_semester(value) -> int | None:
+    if value is None:
+        return None
+    s = str(value).strip()
+    try:
+        n = int(float(s))
+        if 1 <= n <= 4:
+            return n
+    except (ValueError, TypeError):
+        pass
+    return _CELL_TO_NUM.get(s.lower()) or _CELL_TO_NUM.get(s)
+
+
+def _find_semester_column(df: pd.DataFrame) -> str | None:
+    for col in df.columns:
+        if str(col).strip().lower() in _SEMESTER_COL_NAMES or str(col).strip() in _SEMESTER_COL_NAMES:
+            return col
+    return None
+
+
+def _filter_by_semester(df: pd.DataFrame, quarter: str) -> pd.DataFrame:
+    col = _find_semester_column(df)
+    if col is None:
+        logger.info("ℹ️  No semester column found — processing all rows")
+        return df
+
+    target = _QUARTER_TO_NUM.get(quarter.strip())
+    if target is None:
+        logger.warning(f"⚠️  Unrecognized quarter '{quarter}', skipping semester filter")
+        return df
+
+    mask = df[col].apply(_normalize_cell_semester) == target
+    filtered = df[mask].copy()
+
+    logger.info(f"🔍 Semester filter on '{col}': kept {len(filtered)}/{len(df)} rows for quarter {target}")
+
+    if len(filtered) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"لم يتم العثور على سجلات للفصل المحدد / "
+                f"No records found for the selected quarter ({quarter}) "
+                f"in column '{col}'. Please verify the file or your quarter selection."
+            )
+        )
+
+    return filtered
+
 
 def convert_numpy(obj):
     """Recursively convert numpy/pandas types to native Python types for JSON serialization."""
@@ -50,20 +132,8 @@ async def process_medication_data(
     file: UploadFile = File(...),
     quarter: str = Form(None),
     year: str = Form(None),
-    total_doses: int = Form(None)
+    total_doses: int = Form(...)
 ):
-    """
-    Process uploaded Excel medication error file.
-
-    Args:
-        file:         Excel file upload (.xlsx or .xls)
-        quarter:      Quarter name override, e.g. "الفصل الثالث" (optional — auto-detected from dates)
-        year:         Year override, e.g. "2025" (optional)
-        total_doses:  Total doses dispensed this quarter (optional — auto-extracted from file)
-
-    Returns:
-        Processed records + full statistics dict
-    """
     temp_path = None
 
     try:
@@ -71,6 +141,9 @@ async def process_medication_data(
 
         if not file.filename.endswith(('.xlsx', '.xls')):
             raise HTTPException(400, "Invalid file type. Upload .xlsx or .xls")
+
+        if total_doses <= 0:
+            raise HTTPException(400, "total_doses must be greater than 0")
 
         os.makedirs("../storage/temp", exist_ok=True)
         temp_path = f"../storage/temp/me_{file.filename}"
@@ -80,23 +153,14 @@ async def process_medication_data(
 
         logger.info(f"💾 Saved to: {temp_path}")
 
-        # --- Process ---
         processor = MedicationErrorProcessor()
         df = processor.load_excel(temp_path)
-        extracted_doses = processor.extract_total_doses(df)
+        processor.total_doses = total_doses
+        logger.info(f"📝 Total doses: {total_doses:,}")
 
-        if extracted_doses:
-            processor.total_doses = extracted_doses
-        elif total_doses:
-            logger.info(f"📝 Using manual total doses: {total_doses:,}")
-            processor.total_doses = total_doses
-        else:
-            raise HTTPException(
-                400,
-                "Total doses not found in file. "
-                "Add a row at the bottom like 'Number of doses = 431124', "
-                "or pass total_doses in the form."
-            )
+        # Filter to the selected semester/quarter (if column exists)
+        if quarter:
+            df = _filter_by_semester(df, quarter)
 
         df_clean = processor.clean_data(df)
 

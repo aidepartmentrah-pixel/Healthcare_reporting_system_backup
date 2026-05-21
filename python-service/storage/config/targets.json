@@ -1,0 +1,35 @@
+{
+  "mortality": {
+    "rate": 2
+  },
+  "medication": {
+    "error_rate": 0.03
+  },
+  "vap": {
+    "ICU": 25,
+    "CCU": 15,
+    "CSU": 9.5,
+    "Ped": 5.5,
+    "ICN": 10,
+    "ITU": 25,
+    "TEST": 15,
+    "NEW": 9
+  },
+  "clabsi": {
+    "ICU": 10,
+    "CCU": 9,
+    "CSU": 4,
+    "ICN": 14,
+    "Pediatric": 8,
+    "ITU": 10
+  },
+  "cauti": {
+    "ICU": 4.5,
+    "CCU": 4.5,
+    "CSU": 4.5,
+    "Ped": 1.6,
+    "ICN": 4.5,
+    "3rd West": 4.8,
+    "ITU": 4.5
+  }
+}

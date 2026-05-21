@@ -7,6 +7,7 @@ All auto-corrections are case-insensitive
 import pandas as pd
 from typing import Dict
 from loguru import logger
+from app.config import load_targets
 
 
 class MedicationErrorStatistics:
@@ -35,7 +36,7 @@ class MedicationErrorStatistics:
                 'error_rate': error_rate,
                 'total_errors': total_errors,
                 'total_doses': total_doses,
-                'target': 0.03
+                'target': load_targets().get('medication', {}).get('error_rate', 0.03)
             },
             'error_cycle': self._calculate_error_cycle(df),
             'detected_by': self._calculate_detection(df),
@@ -50,6 +51,9 @@ class MedicationErrorStatistics:
             'departments_all': self._calculate_departments_all(df),
             'heatmap_cycle_cause': self._calculate_heatmap(df, row_col='error_cycle', col_col='error_cause'),
             'heatmap_cause_cycle': self._calculate_heatmap(df, row_col='error_cause', col_col='error_cycle'),
+            'heatmap_cause_unit':  self._calculate_heatmap(df, row_col='error_cause', col_col='nursing_unit'),
+            'heatmap_cause_job':   self._calculate_heatmap(df, row_col='error_cause', col_col='job_title'),
+            'heatmap_cause_shift': self._calculate_heatmap(df, row_col='error_cause', col_col='duty_full'),
         }
         
         logger.success(f"✅ Statistics calculated - Error rate: {error_rate}%")
@@ -109,23 +113,7 @@ class MedicationErrorStatistics:
             return {'counts': {}, 'percentages': {}, 'total': 0}
         
         df_clean = df.copy()
-        
-        # Case-insensitive auto-correct
-        def standardize_detection(val):
-            val = str(val).lower().strip()
-            
-            if 'pharmacist' in val or 'pharm' in val:
-                return 'Pharmacist'
-            elif val.startswith('rn') or ('nurse' in val and 'head' not in val):
-                return 'RN'
-            elif 'hn' in val or 'head nurse' in val:
-                return 'HN'
-            elif 'physician' in val or 'doctor' in val or val.startswith('dr'):
-                return 'Physician'
-            
-            return val.title() if val else 'Unknown'
-        
-        df_clean['detected_clean'] = df_clean[detection_col].apply(standardize_detection)
+        df_clean['detected_clean'] = df_clean[detection_col].fillna('Unknown').astype(str).str.strip()
         
         # Weighted counts
         if 'error_count' in df_clean.columns:
@@ -148,19 +136,7 @@ class MedicationErrorStatistics:
             return {'counts': {}, 'percentages': {}, 'total': 0}
         
         df_clean = df.copy()
-        
-        # Case-insensitive auto-correct
-        def standardize_duty(val):
-            val = str(val).lower().strip()
-            if val in ['am', 'd', 'day']:
-                return 'Day'
-            elif val in ['pm', 'e', 'evening']:
-                return 'Evening'
-            elif val in ['n', 'night']:
-                return 'Night'
-            return val.title() if val else 'Unknown'
-        
-        df_clean['duty_clean'] = df_clean[col].apply(standardize_duty)
+        df_clean['duty_clean'] = df_clean[col].fillna('Unknown').astype(str).str.strip()
         
         # Weighted counts
         if 'error_count' in df_clean.columns:
@@ -181,23 +157,7 @@ class MedicationErrorStatistics:
             return {'counts': {}, 'percentages': {}, 'total': 0}
         
         df_clean = df.copy()
-        
-        # Case-insensitive auto-correct (including spelling fixes)
-        def standardize_staff(val):
-            val = str(val).lower().strip()
-            
-            if 'physician' in val or val.startswith('dr') or 'doctor' in val:
-                return 'Physician'
-            elif val == 'rn' or 'registered nurse' in val:
-                return 'RN'
-            elif 'pharm' in val:  # Catches "pharmasist", "pharmacist"
-                return 'Pharmacist'
-            elif 'hn' in val or 'head nurse' in val:
-                return 'HN'
-            
-            return val.title() if val else 'Unknown'
-        
-        df_clean['staff_clean'] = df_clean['job_title'].apply(standardize_staff)
+        df_clean['staff_clean'] = df_clean['job_title'].fillna('Unknown').astype(str).str.strip()
         
         # Weighted counts
         if 'error_count' in df_clean.columns:
@@ -239,8 +199,7 @@ class MedicationErrorStatistics:
         else:
             counts_lower = df_clean['cause_lower'].value_counts()
         
-        # Get top 6
-        top_causes_lower = counts_lower.nlargest(6)
+        top_causes_lower = counts_lower
         
         # Convert back to proper display names (title case)
         counts = {}

@@ -19,6 +19,94 @@ from app.mortality.docx_generator import matplotlib_docx_generator
 
 router = APIRouter()
 
+# ─── Semester / quarter filtering ─────────────────────────────────────────────
+
+_QUARTER_TO_NUM = {
+    'الفصل الأول': 1, 'الفصل الاول': 1,
+    'الفصل الثاني': 2,
+    'الفصل الثالث': 3,
+    'الفصل الرابع': 4,
+}
+
+_CELL_TO_NUM = {
+    # Arabic
+    'الأول': 1, 'الاول': 1, 'أول': 1, 'اول': 1,
+    'الفصل الأول': 1, 'الفصل الاول': 1,
+    'الفصل 1': 1, 'فصل 1': 1,
+    'الثاني': 2, 'ثاني': 2,
+    'الفصل الثاني': 2, 'الفصل 2': 2, 'فصل 2': 2,
+    'الثالث': 3, 'ثالث': 3,
+    'الفصل الثالث': 3, 'الفصل 3': 3, 'فصل 3': 3,
+    'الرابع': 4, 'رابع': 4,
+    'الفصل الرابع': 4, 'الفصل 4': 4, 'فصل 4': 4,
+    # English words
+    'first': 1, 'one': 1,
+    'second': 2, 'two': 2,
+    'third': 3, 'three': 3,
+    'fourth': 4, 'four': 4,
+    # Numbers and short forms
+    '1': 1, '2': 2, '3': 3, '4': 4,
+    'q1': 1, 'q2': 2, 'q3': 3, 'q4': 4,
+    'q 1': 1, 'q 2': 2, 'q 3': 3, 'q 4': 4,
+    's1': 1, 's2': 2, 's3': 3, 's4': 4,
+    's 1': 1, 's 2': 2, 's 3': 3, 's 4': 4,
+    'semester 1': 1, 'semester 2': 2, 'semester 3': 3, 'semester 4': 4,
+    'quarter 1': 1, 'quarter 2': 2, 'quarter 3': 3, 'quarter 4': 4,
+}
+
+_SEMESTER_COL_NAMES = {'الفصل', 'فصل', 'semester', 'quarter', 'الربع', 'ربع'}
+
+
+def _normalize_cell_semester(value) -> int | None:
+    if value is None:
+        return None
+    s = str(value).strip()
+    # Try numeric directly (handles float like 1.0)
+    try:
+        n = int(float(s))
+        if 1 <= n <= 4:
+            return n
+    except (ValueError, TypeError):
+        pass
+    return _CELL_TO_NUM.get(s.lower()) or _CELL_TO_NUM.get(s)
+
+
+def _find_semester_column(df: pd.DataFrame) -> str | None:
+    for col in df.columns:
+        normalized = str(col).strip().lower()
+        if normalized in _SEMESTER_COL_NAMES or str(col).strip() in _SEMESTER_COL_NAMES:
+            return col
+    return None
+
+
+def _filter_by_semester(df: pd.DataFrame, quarter: str) -> pd.DataFrame:
+    col = _find_semester_column(df)
+    if col is None:
+        logger.info("ℹ️  No semester column found — processing all rows")
+        return df
+
+    target = _QUARTER_TO_NUM.get(quarter.strip())
+    if target is None:
+        logger.warning(f"⚠️  Unrecognized quarter '{quarter}', skipping semester filter")
+        return df
+
+    mask = df[col].apply(_normalize_cell_semester) == target
+    filtered = df[mask].copy()
+
+    logger.info(f"🔍 Semester filter on '{col}': kept {len(filtered)}/{len(df)} rows for quarter {target}")
+
+    if len(filtered) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"لم يتم العثور على سجلات للفصل المحدد / "
+                f"No records found for the selected quarter ({quarter}) "
+                f"in column '{col}'. Please verify the file or your quarter selection."
+            )
+        )
+
+    return filtered
+
 
 def convert_numpy(obj):
     """Recursively convert numpy/datetime types to native Python types for JSON serialization."""
@@ -87,6 +175,9 @@ async def process_mortality_data(
         else:
             df, who_summary, _ = excel_handler.parse_excel(temp_path)
         logger.info(f"📋 Parsed: {len(df)} records")
+
+        # 1b. Filter to rows matching the selected semester/quarter (if column exists)
+        df = _filter_by_semester(df, quarter)
 
         # 2. Clean data (auto-detects CSV vs Excel)
         df_cleaned = data_processor.clean_data(df)
@@ -285,7 +376,8 @@ async def generate_report(request: dict):
         if current_entry:
             data = {
                 'statistics': current_entry['statistics'],
-                'who_categories': current_entry.get('who_categories', [])
+                'who_categories': current_entry.get('who_categories', []),
+                'records': current_entry.get('records', []),
             }
         else:
             # Fallback: reconstruct minimal statistics from the lean history entry

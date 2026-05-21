@@ -752,11 +752,15 @@ class MedicationErrorDocxGenerator:
         self._add_rtl_para(doc, 'توزيع ME بحسب طريقة اكتشافها',
                            10, bold=True, font=FONT_ANALYSIS)
 
+        _det_counts  = stats.get('detected_by', {}).get('counts', {})
+        _det_sources = list(_det_counts.keys())
+        _det_n       = len(_det_sources)
+        _det_list    = ' , '.join(_det_sources) if _det_sources else '—'
         p4_intro = doc.add_paragraph()
         self._set_rtl(p4_intro)
         self._zero_spacing(p4_intro)
         r4_intro = p4_intro.add_run(
-            "تم اكتشاف الاخطاء من قبل 3 مصادر و هي الصيدلي , HN و RN و كانت على الشكل التالي :"
+            f"تم اكتشاف الاخطاء من قبل {_det_n} مصادر و هي {_det_list} و كانت على الشكل التالي :"
         )
         r4_intro.font.name = FONT_ANALYSIS
         r4_intro.font.size = Pt(10)
@@ -1152,7 +1156,7 @@ class MedicationErrorDocxGenerator:
         elif adverse_count > 0:
             event_note = f"كذلك ظهرت {adverse_count} حالة adverse event."
         else:
-            event_note = "كذلك لم يظهر أي حالة adverse event أو .sentinel"
+            event_note = "كذلك لم يظهر أي حالة adverse event أو .     sentinel"
 
         final_text = f"{performance}، {event_note}"
         self._add_titled_row(doc, final_text, shade=None, border=BORDER_FINE)

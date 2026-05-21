@@ -3,7 +3,7 @@
   "quarter": "الفصل الرابع",
   "cases": [
     {
-      "case_number": 1234567891,
+      "case_number": 5690.752478,
       "nb_of_cases": 1,
       "year": 2025,
       "semester": "Fourth",
@@ -36,7 +36,7 @@
       "respiratory_pb": false
     },
     {
-      "case_number": 9876543211,
+      "case_number": 5690.753845,
       "nb_of_cases": 2,
       "year": 2025,
       "semester": "Fourth",
@@ -47,10 +47,10 @@
       "diagnosis": "Pleural effusion",
       "germs": "Acinetobacter Baumanii",
       "date_of_admission": "2025-11-10",
-      "date_of_intubation": "2025-11-10",
+      "date_of_intubation": null,
       "date_of_infection": "2025-11-29",
       "infection_month": "2025-11",
-      "intubation_to_infection_days": 19,
+      "intubation_to_infection_days": null,
       "admission_to_infection_days": 19,
       "length_of_stay": null,
       "duration_of_ventilation": null,
@@ -69,7 +69,7 @@
       "respiratory_pb": false
     },
     {
-      "case_number": 1123456789,
+      "case_number": 5690.751375,
       "nb_of_cases": 1,
       "year": 2025,
       "semester": "Fourth",
@@ -102,7 +102,7 @@
       "respiratory_pb": false
     },
     {
-      "case_number": 1112345678,
+      "case_number": 5690.751375,
       "nb_of_cases": 2,
       "year": 2025,
       "semester": "Fourth",
@@ -135,7 +135,7 @@
       "respiratory_pb": false
     },
     {
-      "case_number": 1223456789,
+      "case_number": 5690.751375,
       "nb_of_cases": 3,
       "year": 2025,
       "semester": "Fourth",
@@ -144,7 +144,7 @@
       "age_display": "74Y",
       "gender": "Male",
       "diagnosis": "Cardiac arrest",
-      "germs": "Pseudomonas aeruginsa",
+      "germs": "Pseudomonas aeruginosa",
       "date_of_admission": "2025-09-27",
       "date_of_intubation": "2025-09-27",
       "date_of_infection": "2025-02-11",
@@ -168,7 +168,7 @@
       "respiratory_pb": false
     },
     {
-      "case_number": 1233456789,
+      "case_number": 5690.250158,
       "nb_of_cases": 4,
       "year": 2025,
       "semester": "Fourth",
@@ -201,7 +201,7 @@
       "respiratory_pb": false
     },
     {
-      "case_number": 1234456789,
+      "case_number": 5690.749792,
       "nb_of_cases": 1,
       "year": 2025,
       "semester": "Fourth",
@@ -234,7 +234,7 @@
       "respiratory_pb": false
     },
     {
-      "case_number": 1234556789,
+      "case_number": 5690.750741,
       "nb_of_cases": 1,
       "year": 2025,
       "semester": "Fourth",
@@ -267,7 +267,7 @@
       "respiratory_pb": false
     },
     {
-      "case_number": 1234566789,
+      "case_number": 5690.604765,
       "nb_of_cases": 2,
       "year": 2025,
       "semester": "Fourth",
@@ -276,7 +276,7 @@
       "age_display": "1Y",
       "gender": "Male",
       "diagnosis": "Respiratory failure",
-      "germs": "Pseudomonas aeruginsa",
+      "germs": "Pseudomonas aeruginosa",
       "date_of_admission": "2025-10-23",
       "date_of_intubation": "2025-10-28",
       "date_of_infection": "2025-03-11",
@@ -300,13 +300,46 @@
       "respiratory_pb": true
     },
     {
-      "case_number": 1234567789,
+      "case_number": 5690.746738,
       "nb_of_cases": 3,
       "year": 2025,
       "semester": "Fourth",
       "floor": "ICN",
       "age": 0.25,
       "age_display": "3M",
+      "gender": "Male",
+      "diagnosis": "Congenital heart disease",
+      "germs": "Xanthomonas maltophilia",
+      "date_of_admission": "2025-10-16",
+      "date_of_intubation": "2025-10-31",
+      "date_of_infection": "2025-11-14",
+      "infection_month": "2025-11",
+      "intubation_to_infection_days": 14,
+      "admission_to_infection_days": 29,
+      "length_of_stay": null,
+      "duration_of_ventilation": null,
+      "diabetic": false,
+      "hypertension": false,
+      "dyslipidemia": false,
+      "heart_disease": false,
+      "kidney_disease": false,
+      "copd": false,
+      "smoker": false,
+      "obesity": false,
+      "cardiac_congenital_malformation": true,
+      "advanced_age": false,
+      "cancer": false,
+      "compromised_immune_system": false,
+      "respiratory_pb": false
+    },
+    {
+      "case_number": 5690.746733,
+      "nb_of_cases": 3,
+      "year": 2025,
+      "semester": "Fourth",
+      "floor": "NEW",
+      "age": 0.4167,
+      "age_display": "5M",
       "gender": "Male",
       "diagnosis": "Congenital heart disease",
       "germs": "Xanthomonas maltophilia",

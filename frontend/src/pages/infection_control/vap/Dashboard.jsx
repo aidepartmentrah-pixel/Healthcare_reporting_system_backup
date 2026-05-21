@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import styles from "../../../styles/Dashboard.module.css";
+import DashboardSearch from '../../../components/DashboardSearch';
 import {
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  Cell,
   LineChart,
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend
+  Legend,
+  LabelList,
 } from "recharts";
 import { API_VAP as API_URL } from '../../../config/api';
 
@@ -18,6 +23,23 @@ const RED    = "#dc2626";
 const AMBER  = "#f59e0b";
 const BORDER = "#e5e7eb";
 const SLATE  = "#64748b";
+
+const RISK_COLS = [
+  'diabetic','hypertension','dyslipidemia','heart_disease','kidney_disease',
+  'copd','smoker','obesity','cardiac_congenital_malformation','advanced_age',
+  'cancer','compromised_immune_system','respiratory_pb',
+];
+const RISK_LABELS_EN = {
+  diabetic:'Diabetic', hypertension:'Hypertension', dyslipidemia:'Dyslipidemia',
+  heart_disease:'Heart Disease', kidney_disease:'Kidney Disease', copd:'COPD',
+  smoker:'Smoker', obesity:'Obesity', cardiac_congenital_malformation:'Cardiac Congenital Malformation',
+  advanced_age:'Advanced Age', cancer:'Cancer',
+  compromised_immune_system:'Compromised Immune System', respiratory_pb:'Respiratory Problem',
+};
+const getRiskFactors = c =>
+  RISK_COLS.filter(k => c[k] === true || c[k] === 'Yes' || c[k] === 'yes')
+           .map(k => RISK_LABELS_EN[k]).join(', ') || '—';
+const fmtNum = v => v == null ? '—' : String(v).replace(/\.0+$/, '');
 
 const TS = {
   contentStyle: {
@@ -191,8 +213,14 @@ function VapDashboard({ language }) {
       ? (history.find(e => e.quarter === currentData.quarter && String(e.year) === String(currentData.year)) || history[history.length - 1])
       : history[history.length - 1];
 
+  const activeFloors   = Object.keys(targets).filter(dept =>
+    history.some(q => (q.summary?.[dept]?.cases || 0) > 0)
+  );
+  const displayHistory = history.slice(-4);
+  const summaryHistory = history.slice(-6);
+
   const SummaryTable = () => (
-    <div style={{ background: "#ffffff", borderRadius: "14px",
+    <div id="vap-performance" style={{ background: "#ffffff", borderRadius: "14px",
                   boxShadow: "0 6px 18px rgba(0,0,0,0.06)", overflow: "hidden",
                   marginBottom: "2rem" }}>
       <div style={{ padding: "1rem 1.5rem",
@@ -207,14 +235,14 @@ function VapDashboard({ language }) {
           <thead style={{ background: "#f1f5f9" }}>
             <tr>
               <th style={thStyle}>{t('vapDeptTarget')}</th>
-              {history.map((q, i) => (
+              {summaryHistory.map((q, i) => (
                 <th key={i} style={thStyle}>{shortQ(q.quarter)} {q.year}</th>
               ))}
             </tr>
           </thead>
 
           <tbody>
-            {Object.keys(targets).map((dept, rowIdx) => {
+            {activeFloors.map((dept, rowIdx) => {
               const latestRate = latest.summary?.[dept]?.rate;
               return (
                 <tr key={dept} style={{ background: rowIdx % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
@@ -233,13 +261,13 @@ function VapDashboard({ language }) {
                     </div>
                   </td>
 
-                  {history.map((q, colIdx) => {
+                  {summaryHistory.map((q, colIdx) => {
                     const floor      = q.summary?.[dept];
                     const cases      = floor?.cases ?? null;
                     const days       = floor?.ventilator_days ?? null;
                     const rate       = floor?.rate ?? null;
                     const isAbove    = rate !== null && rate > targets[dept];
-                    const prevRate   = colIdx > 0 ? history[colIdx - 1].summary?.[dept]?.rate ?? null : null;
+                    const prevRate   = colIdx > 0 ? summaryHistory[colIdx - 1].summary?.[dept]?.rate ?? null : null;
                     const arrow      = prevRate !== null && rate !== null
                       ? rate > prevRate ? " ↑" : rate < prevRate ? " ↓" : ""
                       : "";
@@ -275,13 +303,13 @@ function VapDashboard({ language }) {
     const latestFloor = latest.summary?.[dept];
     if (!latestFloor) return null;
 
-    const trendData = history.map(q => ({
+    const trendData = displayHistory.map(q => ({
       label:  `${shortQ(q.quarter)} ${q.year}`,
       rate:   q.summary?.[dept]?.rate  || 0,
       target: targets[dept]
     }));
 
-    const validQuarters = history.filter(
+    const validQuarters = displayHistory.filter(
       q => q.germs_distribution?.[dept] &&
            Object.keys(q.germs_distribution[dept] || {}).length > 0
     );
@@ -326,6 +354,13 @@ function VapDashboard({ language }) {
              + `${qKey === latestKey ? Math.max(g-15,0) : g},`
              + `${qKey === latestKey ? Math.max(b-15,0) : b})`;
       };
+      const cellTextColor = (pct) => {
+        const n = pct / maxPct;
+        const lum = 0.2126 * (219 + (30  - 219) * n) / 255
+                  + 0.7152 * (234 + (64  - 234) * n) / 255
+                  + 0.0722 * (254 + (175 - 254) * n) / 255;
+        return lum < 0.45 ? '#fff' : '#1e293b';
+      };
 
       return (
         <div style={{ marginBottom: "2rem" }}>
@@ -347,7 +382,7 @@ function VapDashboard({ language }) {
                       <div key={k} style={{ background: cellColor(cell.percent, k),
                                             borderRadius: 8, padding: 8, textAlign: "center",
                                             fontSize: 11, fontWeight: 600,
-                                            color: cell.percent > 25 ? "#fff" : "#1e293b" }}>
+                                            color: cellTextColor(cell.percent) }}>
                         {cell.count}
                         <div style={{ fontSize: 10 }}>({cell.percent.toFixed(0)}%)</div>
                       </div>
@@ -362,7 +397,7 @@ function VapDashboard({ language }) {
     };
 
     return (
-      <div key={dept} style={{ marginBottom: "4rem", background: "#ffffff",
+      <div key={dept} id={`vap-dept-${dept}`} style={{ marginBottom: "4rem", background: "#ffffff",
                                 borderRadius: "16px",
                                 boxShadow: "0 6px 20px rgba(0,0,0,0.05)",
                                 padding: "2rem" }}>
@@ -382,10 +417,10 @@ function VapDashboard({ language }) {
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={trendData}
-                         margin={{ top: 30, right: 20, left: 40, bottom: 20 }}>
+                         margin={{ top: 30, right: 60, left: 40, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis dataKey="label" interval={0} angle={-30} textAnchor="end"
-                       height={60} tick={{ fontSize: 10 }} />
+                       height={70} tick={{ fontSize: 10 }} padding={{ right: 30 }} />
                 <YAxis hide />
                 <Tooltip {...TS}
                   formatter={(v, name) => [
@@ -407,6 +442,75 @@ function VapDashboard({ language }) {
         </div>
 
         <GermHeatmap />
+
+        {/* ── Detailed Cases Table ── */}
+        {(() => {
+          const deptCases = (currentData?.cases || []).filter(c => c.floor === dept);
+          if (!deptCases.length) return null;
+          const quarterMismatch = currentData && (
+            currentData.quarter !== latest.quarter ||
+            String(currentData.year) !== String(latest.year)
+          );
+          const dir  = ar ? 'rtl' : 'ltr';
+          const thS  = { padding: '9px 10px', textAlign: 'start', fontWeight: 700,
+                         color: '#1e3a8a', whiteSpace: 'nowrap',
+                         borderBottom: '2px solid #93c5fd', background: '#dbeafe' };
+          const tdS  = { padding: '7px 10px', borderBottom: '1px solid #e2e8f0',
+                         verticalAlign: 'top', textAlign: 'start' };
+          const hdrs = ar
+            ? ['رقم الحالة','التشخيص','العمر','الجنس','الجرثومة','تاريخ الدخول','تاريخ التنبيب','تاريخ الإصابة','عوامل الخطر']
+            : ['Case #','Diagnosis','Age','Gender','Germs','Admission','Intubation','Infection','Risk Factors'];
+          return (
+            <div style={{ marginTop: '2rem' }} dir={dir}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+                <h3 style={{ margin: 0, color: '#1e3a8a' }}>
+                  {ar ? `تفاصيل الحالات — ${dept}` : `Detailed Cases — ${dept}`}
+                  <span style={{ fontSize: 13, fontWeight: 400, color: SLATE, marginInlineStart: 8 }}>
+                    ({currentData.quarter} {currentData.year})
+                  </span>
+                </h3>
+                {quarterMismatch && (
+                  <span style={{ fontSize: 11, color: '#b45309', background: '#fef3c7',
+                                 padding: '2px 8px', borderRadius: 6 }}>
+                    {ar ? '⚠ البيانات من آخر رفع' : '⚠ Cases from most recent upload'}
+                  </span>
+                )}
+                <span style={{ marginInlineStart: 'auto', fontSize: 12, color: SLATE }}>
+                  {ar ? `${deptCases.length} حالة` : `${deptCases.length} case${deptCases.length !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+              <div style={{ overflowX: 'auto', borderRadius: 10,
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }} dir={dir}>
+                  <thead>
+                    <tr>{hdrs.map(h => <th key={h} style={thS}>{h}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {deptCases.map((c, i) => (
+                      <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                        <td style={{ ...tdS, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          {fmtNum(c.case_number) !== '—' ? fmtNum(c.case_number) : i + 1}
+                        </td>
+                        <td style={{ ...tdS, minWidth: 120 }}>{c.diagnosis || '—'}</td>
+                        <td style={{ ...tdS, whiteSpace: 'nowrap' }}>{c.age_display || fmtNum(c.age)}</td>
+                        <td style={{ ...tdS, whiteSpace: 'nowrap' }}>{c.gender || '—'}</td>
+                        <td style={{ ...tdS, minWidth: 100, fontStyle: 'italic', color: '#1e40af' }}>
+                          {c.germs || '—'}
+                        </td>
+                        <td style={{ ...tdS, whiteSpace: 'nowrap' }}>{c.date_of_admission  || '—'}</td>
+                        <td style={{ ...tdS, whiteSpace: 'nowrap' }}>{c.date_of_intubation || '—'}</td>
+                        <td style={{ ...tdS, whiteSpace: 'nowrap' }}>{c.date_of_infection  || '—'}</td>
+                        <td style={{ ...tdS, minWidth: 160, color: '#991b1b', fontSize: 11 }}>
+                          {getRiskFactors(c)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   };
@@ -428,9 +532,117 @@ function VapDashboard({ language }) {
         </div>
       </div>
 
+      <DashboardSearch sections={[
+        { id: 'vap-performance',       ar: 'ملخص الأداء الفصلي لـ VAP',        en: 'VAP Quarterly Performance Summary' },
+        { id: 'vap-floor-comparison',  ar: 'مقارنة معدلات الأقسام',             en: 'Floor Rate Comparison' },
+        ...activeFloors.map(dept => ({ id: `vap-dept-${dept}`, ar: `تفاصيل الحالات — ${dept}`, en: `Detailed Cases — ${dept}` })),
+      ]} />
+
       <SummaryTable />
+
+      {/* ── Floor Comparison Chart ── */}
+      {activeFloors.length > 0 && (() => {
+        const floorBarData = activeFloors.map(dept => ({
+          floor:  dept,
+          rate:   latest.summary?.[dept]?.rate   ?? 0,
+          target: targets[dept]                  ?? 0,
+          cases:  latest.summary?.[dept]?.cases  ?? 0,
+        }));
+        const many        = activeFloors.length > 5;
+        const chartHeight = Math.max(300, 260 + Math.max(0, activeFloors.length - 5) * 18);
+        const xAxisHeight = many ? 70 : 30;
+        const maxBarSize  = Math.min(52, Math.floor(560 / (activeFloors.length * 2 + 1)));
+
+        const RateLabel = ({ x, y, width, index }) => {
+          if (width < 18) return null;
+          const d  = floorBarData[index] ?? {};
+          const cx = x + width / 2;
+          return (
+            <g>
+              <text x={cx} y={y - 20} textAnchor="middle" fontSize={10} fontWeight={700} fill="#1e293b">
+                {Number(d.rate ?? 0).toFixed(1)}‰
+              </text>
+              <text x={cx} y={y - 7} textAnchor="middle" fontSize={9} fill="#64748b">
+                ({d.cases ?? 0})
+              </text>
+            </g>
+          );
+        };
+
+        return (
+          <div id="vap-floor-comparison" style={{ background: "#ffffff", borderRadius: "14px",
+                        boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
+                        padding: "1.5rem", marginBottom: "2rem" }}>
+            <h3 style={{ margin: "0 0 1rem", color: "#1e3a8a" }}>
+              {t('vapDashboardTitle')} — {t('floorRateComparison')} ({latest.quarter} {latest.year})
+            </h3>
+            <ResponsiveContainer width="100%" height={chartHeight}>
+              <BarChart data={floorBarData}
+                        margin={{ top: 44, right: 20, left: 0, bottom: 8 }}
+                        barCategoryGap="25%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="floor"
+                       tick={{ fontSize: many ? 10 : 12, fontWeight: 600 }}
+                       interval={0}
+                       angle={many ? -35 : 0}
+                       textAnchor={many ? "end" : "middle"}
+                       height={xAxisHeight} />
+                <YAxis tickFormatter={v => `${v}‰`} tick={{ fontSize: 11 }} />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
+                    const rateRow   = payload.find(p => p.dataKey === 'rate');
+                    const targetRow = payload.find(p => p.dataKey === 'target');
+                    const cases     = rateRow?.payload?.cases ?? 0;
+                    return (
+                      <div style={{ ...TS.contentStyle, minWidth: 170 }}>
+                        <div style={{ fontWeight: 700, marginBottom: 6, color: '#1e293b' }}>{label}</div>
+                        {rateRow && (
+                          <div style={{ color: rateRow.fill, marginBottom: 3 }}>
+                            {t('vapActualRate')}: {Number(rateRow.value).toFixed(2)}‰
+                            <span style={{ color: '#64748b', marginLeft: 6 }}>({cases} cases)</span>
+                          </div>
+                        )}
+                        {targetRow && (
+                          <div style={{ color: AMBER }}>
+                            {t('vapTargetLabel')}: {targetRow.value}‰
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }}
+                />
+                <Legend
+                  verticalAlign="top" height={36}
+                  payload={[
+                    { value: `${t('vapActualRate')} (≤ ${t('vapTargetLabel')})`, type: 'square', color: GREEN },
+                    { value: `${t('vapActualRate')} (> ${t('vapTargetLabel')})`, type: 'square', color: RED },
+                    { value: t('vapTargetLabel'),                                  type: 'square', color: AMBER },
+                  ]}
+                />
+                <Bar dataKey="rate" name={t('vapActualRate')}
+                     radius={[6, 6, 0, 0]} maxBarSize={maxBarSize}>
+                  {floorBarData.map(entry => (
+                    <Cell key={entry.floor}
+                          fill={entry.rate > entry.target ? RED : GREEN} />
+                  ))}
+                  <LabelList content={RateLabel} />
+                </Bar>
+                <Bar dataKey="target" name={t('vapTargetLabel')}
+                     fill={AMBER} fillOpacity={0.45} radius={[6, 6, 0, 0]}
+                     maxBarSize={maxBarSize}>
+                  <LabelList dataKey="target" position="top"
+                             formatter={v => `${v}‰`}
+                             style={{ fontSize: 10, fill: AMBER }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      })()}
+
       <div style={{ marginTop: "1rem" }}>
-        {Object.keys(targets).map(dept => (
+        {activeFloors.map(dept => (
           <DeptSection key={dept} dept={dept} />
         ))}
       </div>
