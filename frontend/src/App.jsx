@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-r
 import { useTranslation } from 'react-i18next';
 import './i18n/config';
 import './App.css';
-import { API_URL, API_MEDICATION } from './config/api';
+import { API_URL, API_MEDICATION, API_VAP, API_CLABSI, API_CAUTI } from './config/api';
 
 class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { hasError: false }; }
@@ -54,7 +54,7 @@ function MortalityDashboardWrapper({ mortalityData, historyData, mortalityTarget
   const [fetching, setFetching]  = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/available-quarters')
+    fetch(`${API_URL}/available-quarters`)
       .then(r => r.json())
       .then(q => Array.isArray(q) ? setQuarters(q) : null)
       .catch(() => {});
@@ -68,7 +68,7 @@ function MortalityDashboardWrapper({ mortalityData, historyData, mortalityTarget
     onSelectQ(q);
     if (!q) { setActiveData(mortalityData); return; }
     setFetching(true);
-    fetch(`http://localhost:8000/api/quarter?q=${encodeURIComponent(q.quarter)}&year=${q.year}`)
+    fetch(`${API_URL}/quarter?q=${encodeURIComponent(q.quarter)}&year=${q.year}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setActiveData(d); })
       .catch(() => {})
@@ -100,7 +100,7 @@ function MedicationDashboardWrapper({ medicationData, medicationTarget, language
   const [fetching, setFetching]  = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/medication/available-quarters')
+    fetch(`${API_MEDICATION}/available-quarters`)
       .then(r => r.json())
       .then(q => Array.isArray(q) ? setQuarters(q) : null)
       .catch(() => {});
@@ -114,7 +114,7 @@ function MedicationDashboardWrapper({ medicationData, medicationTarget, language
     onSelectQ(q);
     if (!q) { setActiveData(medicationData); return; }
     setFetching(true);
-    fetch(`http://localhost:8000/api/medication/quarter?q=${encodeURIComponent(q.quarter)}&year=${q.year}`)
+    fetch(`${API_MEDICATION}/quarter?q=${encodeURIComponent(q.quarter)}&year=${q.year}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setActiveData(d); })
       .catch(() => {})
@@ -298,17 +298,17 @@ function AppShell({
               } />
               <Route path="/vap/dashboard" element={
                 <IcWrapper language={language} DashboardComponent={VapDashboard}
-                  apiUrl="http://localhost:8000/api/vap"
+                  apiUrl={API_VAP}
                   selectedQ={vapSelectedQ} onSelectQ={setVapSelectedQ} />
               } />
               <Route path="/clabsi/dashboard" element={
                 <IcWrapper language={language} DashboardComponent={ClabsiDashboard}
-                  apiUrl="http://localhost:8000/api/clabsi"
+                  apiUrl={API_CLABSI}
                   selectedQ={clabsiSelectedQ} onSelectQ={setClabsiSelectedQ} />
               } />
               <Route path="/cauti/dashboard" element={
                 <IcWrapper language={language} DashboardComponent={CautiDashboard}
-                  apiUrl="http://localhost:8000/api/cauti"
+                  apiUrl={API_CAUTI}
                   selectedQ={cautiSelectedQ} onSelectQ={setCautiSelectedQ} />
               } />
               <Route path="/medication/dashboard" element={

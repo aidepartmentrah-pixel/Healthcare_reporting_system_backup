@@ -1,8 +1,9 @@
 import { createContext, useContext, useState } from 'react';
+import { API_URL } from '../config/api';
 
 const TOKEN_KEY    = 'admin_token';
 const USERNAME_KEY = 'admin_username';
-const ADMIN_API    = 'http://localhost:8000/api/admin';
+const ADMIN_API    = `${API_URL}/admin`;
 
 const AuthContext = createContext(null);
 
