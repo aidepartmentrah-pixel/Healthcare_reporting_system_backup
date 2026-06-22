@@ -79,7 +79,7 @@ function App() {
   }, []);
 
   const refreshTargets = () => {
-    fetch('http://localhost:8000/api/admin/targets')
+    fetch(`${API_URL}/admin/targets`)
       .then(res => res.ok ? res.json() : {})
       .then(data => setTargets(data))
       .catch(() => {});

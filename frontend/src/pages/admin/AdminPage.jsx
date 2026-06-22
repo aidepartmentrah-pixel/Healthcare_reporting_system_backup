@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '../../config/api';
 
-const API = 'http://localhost:8000/api/admin';
+const API = `${API_URL}/admin`;
 
 const MODULE_LABELS = {
   mortality:  { title: 'Mortality',        unit: '%' },
