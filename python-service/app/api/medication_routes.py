@@ -188,12 +188,12 @@ async def process_medication_data(
         # --- Save lean entry to history (rate / counts / doses only) ---
         me_history.save_quarter(quarter=q, year=y, stats=stats)
 
-        # --- Save full snapshot to current (stats + raw records) ---
+        # --- Save full snapshot to current (stats only — dashboard uses statistics, not records) ---
         me_history.save_current_data(
             quarter=q,
             year=y,
             stats=convert_numpy(dict(stats)),
-            records=convert_numpy(records),
+            records=[],
         )
 
         logger.success(
@@ -224,6 +224,40 @@ async def process_medication_data(
                 os.remove(temp_path)
             except Exception:
                 pass
+
+
+@router.get("/quarter")
+async def get_medication_quarter(q: str, year: str):
+    """Return full dashboard data for a specific medication quarter."""
+    try:
+        entry = me_history.get_current_data(q, year)
+        if not entry:
+            raise HTTPException(status_code=404, detail=f"No full data for {q} {year}. Upload it first.")
+        return convert_numpy({
+            "quarter":       entry.get("quarter", ""),
+            "year":          entry.get("year", ""),
+            "statistics":    entry.get("statistics", {}),
+            "records":       entry.get("records", []),
+            "total_records": len(entry.get("records", [])),
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Medication quarter fetch error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/available-quarters")
+async def get_medication_available_quarters():
+    """Return list of quarters that have full medication data stored (up to last 4)."""
+    try:
+        entries = me_history.load_current_data()
+        return convert_numpy([
+            {"quarter": e.get("quarter", ""), "year": str(e.get("year", ""))}
+            for e in entries
+        ])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/history")

@@ -8,17 +8,27 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from loguru import logger
 
+_AR_TO_Q = {
+    "الفصل الأول":  1, "الفصل الاول": 1,
+    "الفصل الثاني": 2,
+    "الفصل الثالث": 3,
+    "الفصل الرابع": 4,
+}
+_MAX_QUARTERS = 8
+
 
 class MedicationErrorHistory:
     """Manage medication error historical data"""
 
     def __init__(self, storage_path: str = 'storage/data/medication_error_history.json'):
         self.storage_path = Path(storage_path)
-        self.current_path = self.storage_path.parent / 'medication_current.json'
+        self.current_path = self.storage_path.parent / 'medication_current.json'  # legacy
+        self.quarters_dir = self.storage_path.parent / 'medication' / 'quarters'
         self.history = []
 
-        # Create storage directory if needed
+        # Create storage directories if needed
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
+        self.quarters_dir.mkdir(parents=True, exist_ok=True)
 
         # Load existing history
         self.load_history()
@@ -121,64 +131,84 @@ class MedicationErrorHistory:
         
         return sorted(history, key=sort_key)
     
-    # ── Current data (full snapshot for dashboard / report generation) ────────
+    # ── Per-quarter file helpers ──────────────────────────────────────────────
 
-    def _quarter_sort_key(self, entry: Dict) -> tuple:
-        quarter_order = {
-            'الفصل الاول': 1, 'الفصل الأول': 1,
-            'الفصل الثاني': 2,
-            'الفصل الثالث': 3,
-            'الفصل الرابع': 4,
-        }
-        try:
-            return (int(entry.get('year', 0)),
-                    quarter_order.get(entry.get('quarter', ''), 0))
-        except (ValueError, TypeError):
-            return (0, 0)
+    def _quarter_file(self, quarter: str, year) -> Path:
+        n = _AR_TO_Q.get(str(quarter).strip(), 0)
+        return self.quarters_dir / f"{year}_Q{n}.json"
+
+    # ── Current data (full snapshot for dashboard / report generation) ────────
 
     def save_current_data(self, quarter: str, year: int, stats: Dict,
                           records: List = None) -> bool:
-        """
-        Save (or overwrite) the full data for the most recently uploaded quarter
-        in medication_current.json.  This file stores everything needed for the
-        dashboard breakdown charts and DOCX report generation.
-        """
-        new_entry = {
-            'quarter': quarter,
-            'year':    str(year),
+        """Save full data for a quarter to its own file; keep last 8 files."""
+        entry = {
+            'quarter':    quarter,
+            'year':       str(year),
             'statistics': stats,
             'records':    records or [],
         }
-
-        # Always overwrite with only the latest upload
-        data = [new_entry]
-
         try:
-            with open(self.current_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            logger.success(f"✅ Saved current data: {quarter} {year}")
+            path = self._quarter_file(quarter, year)
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(entry, f, ensure_ascii=False, indent=2, default=str)
+
+            # Trim oldest files beyond limit
+            files = sorted(self.quarters_dir.glob("*.json"))
+            for old in files[:-_MAX_QUARTERS]:
+                old.unlink(missing_ok=True)
+
+            logger.success(f"✅ Saved quarter file: {path.name}")
             return True
         except Exception as e:
             logger.error(f"❌ Error saving current data: {e}")
             return False
 
     def load_current_data(self) -> List[Dict]:
-        """Load all entries from medication_current.json."""
-        try:
-            with open(self.current_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            return []
-        except json.JSONDecodeError as e:
-            logger.error(f"Error parsing medication_current.json: {e}")
-            return []
+        """Return all stored quarter entries sorted oldest → newest."""
+        result = []
+        for f in sorted(self.quarters_dir.glob("*.json")):
+            try:
+                with open(f, 'r', encoding='utf-8') as fh:
+                    result.append(json.load(fh))
+            except Exception:
+                pass
+        # Legacy fallback
+        if not result and self.current_path.exists():
+            try:
+                with open(self.current_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return result
+
+    def get_current_data(self, quarter: str, year) -> Optional[Dict]:
+        """Return full data for a specific quarter, or None if not found."""
+        path = self._quarter_file(quarter, year)
+        if path.exists():
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        # Legacy fallback
+        for entry in self.load_current_data():
+            if entry.get('quarter') == quarter and str(entry.get('year')) == str(year):
+                return entry
+        return None
 
     def get_latest_current_data(self) -> Optional[Dict]:
-        """Return the most recently uploaded entry (last item in the list)."""
+        """Return the most recently uploaded quarter (alphabetically last file)."""
+        files = sorted(self.quarters_dir.glob("*.json"))
+        if files:
+            try:
+                with open(files[-1], 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        # Legacy fallback
         data = self.load_current_data()
-        if not data:
-            return None
-        return data[-1]
+        return data[-1] if data else None
 
     def initialize_with_data(self, historical_data: List[Dict]) -> bool:
         """

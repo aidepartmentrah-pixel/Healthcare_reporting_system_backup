@@ -70,6 +70,7 @@ function UploadForm({ tab }) {
   const [missingFloors, setMissingFloors] = useState([]);
   const [denominators,  setDenominators]  = useState({});
   const [newTargets,    setNewTargets]    = useState({});
+  const [noTargetSet,   setNoTargetSet]   = useState(new Set());
   const [error,         setError]         = useState(null);
   const [progress,      setProgress]      = useState(0);
 
@@ -80,8 +81,18 @@ function UploadForm({ tab }) {
     setMissingFloors([]);
     setDenominators({});
     setNewTargets({});
+    setNoTargetSet(new Set());
     setError(null);
     setProgress(0);
+  };
+
+  const toggleNoTarget = (floor) => {
+    setNoTargetSet(prev => {
+      const next = new Set(prev);
+      if (next.has(floor)) next.delete(floor);
+      else next.add(floor);
+      return next;
+    });
   };
 
   // ── Step 1: drop file → scan floors ────────────────────────────────────────
@@ -135,8 +146,9 @@ function UploadForm({ tab }) {
         return;
       }
     }
-    // Validate new targets
+    // Validate new targets (only for floors that have a target set)
     for (const floor of missingFloors) {
+      if (noTargetSet.has(floor)) continue;
       const val = newTargets[floor];
       if (val === '' || val === null || isNaN(Number(val)) || Number(val) < 0) {
         setError(`Please enter a target rate for new floor: ${floor}`);
@@ -155,9 +167,10 @@ function UploadForm({ tab }) {
     fd.append('denominators', JSON.stringify(
       Object.fromEntries(floors.map(f => [f, Number(denominators[f])]))
     ));
-    if (missingFloors.length > 0) {
+    const targetedNewFloors = missingFloors.filter(f => !noTargetSet.has(f));
+    if (targetedNewFloors.length > 0) {
       fd.append('new_targets', JSON.stringify(
-        Object.fromEntries(missingFloors.map(f => [f, Number(newTargets[f])]))
+        Object.fromEntries(targetedNewFloors.map(f => [f, Number(newTargets[f])]))
       ));
     }
 
@@ -298,25 +311,52 @@ function UploadForm({ tab }) {
           {missingFloors.length > 0 && (
             <div className={styles.inputSection}>
               <label className={styles.inputLabel}>
-                🎯 New floors detected — enter target rate (‰) for each
+                🎯 New floors detected — set a target rate (‰) or mark as "No target"
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-                {missingFloors.map(floor => (
-                  <div key={floor}>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: '#b45309' }}>
-                      ⚠ {floor} (new)
-                    </label>
-                    <input
-                      type="number" min="0" step="0.1"
-                      value={newTargets[floor] ?? ''}
-                      onChange={e => setNewTargets(prev => ({ ...prev, [floor]: e.target.value }))}
-                      onWheel={e => e.target.blur()}
-                      style={{ ...inputStyle, borderColor: '#fbbf24' }}
-                      disabled={step === 'processing'}
-                      placeholder="e.g. 10.0"
-                    />
-                  </div>
-                ))}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                {missingFloors.map(floor => {
+                  const isNoTarget = noTargetSet.has(floor);
+                  return (
+                    <div key={floor} style={{
+                      border: `1.5px solid ${isNoTarget ? '#d1d5db' : '#fbbf24'}`,
+                      borderRadius: 10, padding: '10px 12px',
+                      background: isNoTarget ? '#f9fafb' : '#fffbeb',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: isNoTarget ? '#6b7280' : '#92400e' }}>
+                          ⚠ {floor}
+                        </span>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer',
+                                        fontSize: 12, fontWeight: 600,
+                                        color: isNoTarget ? '#374151' : '#64748b' }}>
+                          <input
+                            type="checkbox"
+                            checked={isNoTarget}
+                            onChange={() => toggleNoTarget(floor)}
+                            disabled={step === 'processing'}
+                            style={{ cursor: 'pointer', width: 14, height: 14 }}
+                          />
+                          No target
+                        </label>
+                      </div>
+                      {isNoTarget ? (
+                        <div style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>
+                          Cases counted, no rate calculated
+                        </div>
+                      ) : (
+                        <input
+                          type="number" min="0" step="0.1"
+                          value={newTargets[floor] ?? ''}
+                          onChange={e => setNewTargets(prev => ({ ...prev, [floor]: e.target.value }))}
+                          onWheel={e => e.target.blur()}
+                          style={{ ...inputStyle, borderColor: '#fbbf24', marginTop: 0 }}
+                          disabled={step === 'processing'}
+                          placeholder="Target rate (‰)"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

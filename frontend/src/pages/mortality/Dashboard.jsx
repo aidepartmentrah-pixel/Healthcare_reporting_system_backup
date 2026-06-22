@@ -199,7 +199,7 @@ function MortalityGauge({ rate, target }) {
         <text x="100" y="86" textAnchor="middle" fontSize="26" fontWeight="800" fill={isAbove ? '#ef4444' : '#10b981'}>
           {rate.toFixed(2)}%
         </text>
-        <text x="100" y="102" textAnchor="middle" fontSize="10" fill="#94a3b8">target {target}%</text>
+        <text x="100" y="14" textAnchor="middle" fontSize="10" fontWeight="600" fill="#92400e">target {target}%</text>
       </svg>
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: isAbove ? '#fef2f2' : '#f0fdf4', color: isAbove ? '#dc2626' : '#16a34a', borderRadius: 20, padding: '5px 16px', fontSize: 12, fontWeight: 700, marginTop: 4 }}>
         {isAbove ? '▲ Above Target' : '▼ Below Target'}
@@ -207,7 +207,7 @@ function MortalityGauge({ rate, target }) {
       <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 14, fontSize: 12, color: '#64748b' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#1e293b' }}>{rate.toFixed(2)}%</div>
-          <div>Actual Rate</div>
+          <div>Result</div>
         </div>
         <div style={{ width: 1, background: '#e2e8f0' }} />
         <div style={{ textAlign: 'center' }}>
@@ -278,60 +278,71 @@ function Dashboard({ data, totalPatients = 0, quarter = '', year = '', historyDa
   })();
 
   const calculateStatistics = (mortalityData) => {
-    if (!mortalityData?.records || !Array.isArray(mortalityData.records)) return;
-    const records = mortalityData.records.filter(r => r.include_kpi?.toString().toLowerCase().trim() === 'yes');
-    if (!records.length) return;
+    const s = mortalityData?.statistics;
+    if (!s) return;
 
-    const totalDeaths    = records.length;
-    const averageAge     = records.reduce((s,r) => s + (parseFloat(r.age)||0), 0) / totalDeaths;
-    const averageLOS     = records.reduce((s,r) => s + (parseFloat(r.length_of_stay)||0), 0) / totalDeaths;
-    const maleDeaths     = records.filter(r => r.gender === 'ذكر'  || r.gender?.toLowerCase() === 'male').length;
-    const femaleDeaths   = records.filter(r => r.gender === 'انثى' || r.gender?.toLowerCase() === 'female').length;
-    const malePercentage = ((maleDeaths / totalDeaths) * 100).toFixed(1);
-    const mortalityRate  = totalPatients > 0 ? (totalDeaths / totalPatients) * 100 : null;
+    // ── All main stats from backend pre-computation ──────────────────────────
+    const totalDeaths    = s.kpi_deaths ?? s.total_deaths ?? 0;
+    const averageAge     = (s.demographics?.age?.mean    ?? 0).toFixed(1);
+    const averageLOS     = (s.avg_los                    ?? 0).toFixed(1);
+    const maleDeaths     = s.demographics?.gender?.male  ?? 0;
+    const femaleDeaths   = s.demographics?.gender?.female ?? 0;
+    const malePercentage = (s.demographics?.gender?.male_percentage ?? 0).toFixed(1);
+    const mortalityRate  = s.mortality_metrics?.rate ?? null;
 
-    const monthlyData = {};
-    records.forEach(r => { const m = r.month||'Unknown'; monthlyData[m]=(monthlyData[m]||0)+1; });
-    const monthlyChart = Object.entries(monthlyData)
-      .map(([month, count]) => ({ _key: getMonthIdx(month), deaths: count }))
-      .sort((a, b) => a._key - b._key);
+    // Monthly chart — backend provides {month: 1-12, count: N}
+    const monthlyChart = (s.temporal?.monthly_array || [])
+      .sort((a, b) => a.month - b.month)
+      .map(m => ({ _key: m.month - 1, deaths: m.count }));
 
-    const causesCount = {};
-    records.forEach(r => { const c = r.direct_cause_of_death||'Unknown'; causesCount[c]=(causesCount[c]||0)+1; });
-    const topCauses = Object.entries(causesCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cause,count])=>({cause,count}));
+    // Top 5 causes
+    const topCauses = (s.clinical?.top_causes || [])
+      .slice(0, 5)
+      .map(c => ({ cause: c.name, count: c.count }));
 
-    const bldgCount = {};
-    records.forEach(r => { const b=(r.building||'Unknown').trim().toLowerCase(); bldgCount[b]=(bldgCount[b]||0)+1; });
-    const buildingChart = Object.entries(bldgCount).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value}));
+    // Building chart
+    const buildingChart = Object.entries(s.buildings || {})
+      .filter(([k]) => k !== 'total')
+      .map(([name, b]) => ({ name: name.toUpperCase(), value: b.deaths || 0 }))
+      .sort((a, b) => b.value - a.value);
 
-    const entryCount = {};
-    records.forEach(r => { const e=r.admission_source_category||'Unknown'; entryCount[e]=(entryCount[e]||0)+1; });
-    const entryChart = Object.entries(entryCount).sort((a,b)=>b[1]-a[1]).map(([name,count])=>({name,count}));
+    // Admission source category chart
+    const entryChart = (s.clinical?.admission_source_categories || [])
+      .map(c => ({ name: c.name, count: c.count }))
+      .sort((a, b) => b.count - a.count);
 
+    // Age group chart
     const AGE_ORDER = ['اقل من 5 سنوات','من 5 الى 15 سنة','من 16 الى 30 سنة','من 31 الى 50 سنة','من 51 الى 60 سنة','من 61 الى 70 سنة','من 71 الى 80 سنة','اكثر من 81 سنة'];
-    const ageCount = {};
-    records.forEach(r => { const a=r.age_group||'Unknown'; ageCount[a]=(ageCount[a]||0)+1; });
-    const ageChart = AGE_ORDER.filter(k=>ageCount[k]).map((name,i)=>({name, count:ageCount[name], color:COLORS[i%COLORS.length]}));
-    const ageArray = AGE_ORDER.map(k => ageCount[k] || 0);
+    const ageCats = s.demographics?.age_categories || [];
+    const ageChart = ageCats
+      .filter(a => a.count > 0)
+      .map((a, i) => ({ name: a.group, count: a.count, color: COLORS[i % COLORS.length] }));
+    const ageArray = AGE_ORDER.map(k => (ageCats.find(a => a.group === k)?.count ?? 0));
 
-    const deptCount = {};
-    records.forEach(r => { const d=r.nursing_department||'Unknown'; deptCount[d]=(deptCount[d]||0)+1; });
-    const deptChart = Object.entries(deptCount).sort((a,b)=>b[1]-a[1]).map(([dept,count],i)=>({dept,count,color:COLORS[i%COLORS.length]}));
+    // Department chart
+    const deptChart = (s.departments || [])
+      .map((d, i) => ({ dept: d.name, count: d.count, color: COLORS[i % COLORS.length] }));
+    const deptCount = Object.fromEntries((s.departments || []).map(d => [d.name, d.count]));
 
-    const whoCount = {};
-    records.forEach(r => { const w=r.who_category_1||'Unknown'; whoCount[w]=(whoCount[w]||0)+1; });
+    // WHO chart with cumulative %
     let cum = 0;
-    const whoChart = Object.entries(whoCount).sort((a,b)=>b[1]-a[1]).map(([cat,count],i)=>{
-      cum += count;
-      return { cat, count, cumPct: parseFloat(((cum/totalDeaths)*100).toFixed(1)), color:COLORS[i%COLORS.length] };
-    });
+    const whoChart = Object.entries(s.who_categories_kpi || {})
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, count], i) => {
+        cum += count;
+        return { cat, count, cumPct: parseFloat(((cum / totalDeaths) * 100).toFixed(1)), color: COLORS[i % COLORS.length] };
+      });
 
-    const specialtyChart = (data.statistics?.specialties || [])
-      .map((s, i) => ({ name: s.name, count: s.count, color: COLORS[i % COLORS.length] }));
+    // Specialty chart
+    const specialtyChart = (s.specialties || [])
+      .map((sp, i) => ({ name: sp.name, count: sp.count, color: COLORS[i % COLORS.length] }));
 
-    // KPI = NO — patients who died before 24 hours
-    const kpiNoRecords = mortalityData.records.filter(r => r.include_kpi?.toString().toLowerCase().trim() === 'no');
-    const kpiNoCount   = kpiNoRecords.length;
+    // ── KPI=NO — patients who died within 24h ────────────────────────────────
+    // data.records is now saved as non-KPI rows only (backwards-compatible: the
+    // filter still works correctly if an old JSON has all rows mixed in)
+    const kpiNoRecords = (mortalityData.records || [])
+      .filter(r => String(r.include_kpi ?? 'NO').trim().toUpperCase() !== 'YES');
+    const kpiNoCount   = s.kpi_no_count ?? kpiNoRecords.length;
     const kpiNoDeptCount = {};
     kpiNoRecords.forEach(r => { const d = r.nursing_department || 'Unknown'; kpiNoDeptCount[d] = (kpiNoDeptCount[d] || 0) + 1; });
     const kpiNoDeptChart = Object.entries(kpiNoDeptCount).sort((a,b) => b[1]-a[1]).map(([dept,count],i) => ({ dept, count, color: COLORS[i % COLORS.length] }));
@@ -340,9 +351,9 @@ function Dashboard({ data, totalPatients = 0, quarter = '', year = '', historyDa
       { key: 'before24h', value: kpiNoCount,  fill: '#ef4444' },
     ];
 
-    setStats({ totalDeaths, averageAge: averageAge.toFixed(1), averageLOS: averageLOS.toFixed(1),
-      maleDeaths, femaleDeaths, malePercentage, mortalityRate,
-      monthlyChart, topCauses, buildingChart, entryChart, ageChart, ageArray, deptChart, deptCount, whoChart, specialtyChart,
+    setStats({ totalDeaths, averageAge, averageLOS, maleDeaths, femaleDeaths,
+      malePercentage, mortalityRate, monthlyChart, topCauses, buildingChart,
+      entryChart, ageChart, ageArray, deptChart, deptCount, whoChart, specialtyChart,
       kpiNoCount, kpiNoDeptChart, kpiDonut, kpiNoRecords });
   };
 
@@ -574,7 +585,7 @@ function Dashboard({ data, totalPatients = 0, quarter = '', year = '', historyDa
             <Line
               type="monotone"
               dataKey="rate"
-              name="Actual"
+              name="Result"
               stroke="#2563ea"
               strokeWidth={3}
               dot={{ r: 4 }}
@@ -591,7 +602,7 @@ function Dashboard({ data, totalPatients = 0, quarter = '', year = '', historyDa
               type="monotone"
               dataKey="target"
               name="Target"
-              stroke="#eb4647"
+              stroke="#92400e"
               strokeWidth={2}
               strokeDasharray="6 3"
               dot={false}

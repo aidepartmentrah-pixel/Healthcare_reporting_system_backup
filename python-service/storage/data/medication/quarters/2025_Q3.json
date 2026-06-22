@@ -1,0 +1,688 @@
+{
+  "quarter": "الفصل الثالث",
+  "year": "2025",
+  "statistics": {
+    "summary": {
+      "quarter": "الفصل الثالث",
+      "year": 2025,
+      "error_rate": 0.0104,
+      "total_errors": 45,
+      "total_doses": 431124,
+      "target": 0.03
+    },
+    "error_cycle": {
+      "counts": {
+        "Administration": 4,
+        "Dispensing": 2,
+        "Prescribing": 23,
+        "Transcription": 16
+      },
+      "percentages": {
+        "Administration": 8.9,
+        "Dispensing": 4.4,
+        "Prescribing": 51.1,
+        "Transcription": 35.6
+      },
+      "total": 45
+    },
+    "detected_by": {
+      "counts": {
+        "HN check up": 2,
+        "Pharmacist checkup": 36,
+        "RN check up": 3,
+        "RN midnight check up": 4
+      },
+      "percentages": {
+        "HN check up": 4.4,
+        "Pharmacist checkup": 80.0,
+        "RN check up": 6.7,
+        "RN midnight check up": 8.9
+      },
+      "total": 45
+    },
+    "duty_shift": {
+      "counts": {
+        "DAY": 34,
+        "Evening": 4,
+        "Night": 7
+      },
+      "percentages": {
+        "DAY": 75.6,
+        "Evening": 8.9,
+        "Night": 15.6
+      },
+      "total": 45
+    },
+    "staff_involved": {
+      "counts": {
+        "RN": 20,
+        "pharmasist": 2,
+        "physician": 23
+      },
+      "percentages": {
+        "RN": 44.4,
+        "pharmasist": 4.4,
+        "physician": 51.1
+      },
+      "total": 45
+    },
+    "error_causes": {
+      "counts": {
+        "established treatment protcol deviation": 1,
+        "Medication knowledge Deficiency": 13,
+        "Monitoring": 1,
+        "Non adherence to guidelines": 9,
+        "non competent employee": 4,
+        "Work flow disruption": 17
+      },
+      "percentages": {
+        "established treatment protcol deviation": 2.2,
+        "Medication knowledge Deficiency": 28.9,
+        "Monitoring": 2.2,
+        "Non adherence to guidelines": 20.0,
+        "non competent employee": 8.9,
+        "Work flow disruption": 37.8
+      },
+      "total": 45
+    },
+    "error_types": {
+      "counts": {
+        "Inappropriate dose selection": 8,
+        "Duplication": 6,
+        "Inappropriate dose ": 4,
+        "Wrong FREQUENCY": 4,
+        "excess dose": 4,
+        "wrong drug": 3,
+        "wrong drug*\n(البرنامج الجديد)": 3,
+        "wrong dose/ D.d": 2,
+        "Adverse drug reation ": 1,
+        "Dose adjustment/renal-hepatic": 1
+      },
+      "percentages": {
+        "Inappropriate dose selection": 22.2,
+        "Duplication": 16.7,
+        "Inappropriate dose ": 11.1,
+        "Wrong FREQUENCY": 11.1,
+        "excess dose": 11.1,
+        "wrong drug": 8.3,
+        "wrong drug*\n(البرنامج الجديد)": 8.3,
+        "wrong dose/ D.d": 5.6,
+        "Adverse drug reation ": 2.8,
+        "Dose adjustment/renal-hepatic": 2.8
+      },
+      "total": 36
+    },
+    "departments": {
+      "counts": {
+        "ER": 9,
+        "4th W": 6,
+        "PED": 5,
+        "NICU": 4,
+        "4E": 3,
+        "4th north": 3,
+        "M/S 3rd ext": 2,
+        "cardiac3": 2,
+        "4th ext": 1,
+        "4th new": 1,
+        "CSU": 1,
+        "ER out": 1,
+        "ICU": 1,
+        "ICU ext": 1,
+        "ITCU": 1,
+        "New suite": 1,
+        "TCU": 1,
+        "Unknown": 1,
+        "post csu": 1
+      },
+      "percentages": {
+        "ER": 20.0,
+        "4th W": 13.3,
+        "PED": 11.1,
+        "NICU": 8.9,
+        "4E": 6.7,
+        "4th north": 6.7,
+        "M/S 3rd ext": 4.4,
+        "cardiac3": 4.4,
+        "4th ext": 2.2,
+        "4th new": 2.2,
+        "CSU": 2.2,
+        "ER out": 2.2,
+        "ICU": 2.2,
+        "ICU ext": 2.2,
+        "ITCU": 2.2,
+        "New suite": 2.2,
+        "TCU": 2.2,
+        "Unknown": 2.2,
+        "post csu": 2.2
+      },
+      "total": 45
+    },
+    "ncc_merp": {
+      "counts": {
+        "Category B": 26,
+        "Category C": 19
+      },
+      "percentages": {
+        "Category B": 57.8,
+        "Category C": 42.2
+      },
+      "total": 45
+    },
+    "cause_stage_matrix": {
+      "causes": [
+        "Work Flow Disruption",
+        "Medication Knowledge Deficiency",
+        "Non Adherence To Guidelines",
+        "Non Competent Employee",
+        "Established Treatment Protcol Deviation",
+        "Monitoring"
+      ],
+      "stages": [
+        "Prescribing",
+        "Transcription & Administration",
+        "Dispensing"
+      ],
+      "matrix": {
+        "Established Treatment Protcol Deviation": {
+          "Prescribing": 0,
+          "Transcription & Administration": 1,
+          "Dispensing": 0
+        },
+        "Medication Knowledge Deficiency": {
+          "Prescribing": 6,
+          "Transcription & Administration": 6,
+          "Dispensing": 1
+        },
+        "Monitoring": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Non Adherence To Guidelines": {
+          "Prescribing": 9,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Non Competent Employee": {
+          "Prescribing": 0,
+          "Transcription & Administration": 4,
+          "Dispensing": 0
+        },
+        "Work Flow Disruption": {
+          "Prescribing": 7,
+          "Transcription & Administration": 9,
+          "Dispensing": 1
+        }
+      },
+      "row_totals": {
+        "Established Treatment Protcol Deviation": 1,
+        "Medication Knowledge Deficiency": 13,
+        "Monitoring": 1,
+        "Non Adherence To Guidelines": 9,
+        "Non Competent Employee": 4,
+        "Work Flow Disruption": 17
+      },
+      "col_totals": {
+        "Prescribing": 23,
+        "Transcription & Administration": 20,
+        "Dispensing": 2
+      },
+      "grand_total": 45
+    },
+    "type_stage_matrix": {
+      "types": [
+        "Inappropriate Dose Selection",
+        "Duplication",
+        "Excess Dose",
+        "Inappropriate Dose",
+        "Wrong Frequency",
+        "Wrong Drug",
+        "Wrong Drug*\n(البرنامج الجديد)",
+        "Wrong Dose/ D.D",
+        "Adverse Drug Reation",
+        "Dose Adjustment/Renal-Hepatic",
+        "Improper Dose",
+        "Inappropriate Dose Frequency",
+        "Mislabeling",
+        "Monitoring\nSubtheropetic Level",
+        "Wrong Dose/Ed",
+        "Wrong Iv Rate",
+        "Wrong Patient",
+        "Wrong Unit"
+      ],
+      "stages": [
+        "Prescribing",
+        "Transcription & Administration",
+        "Dispensing"
+      ],
+      "matrix": {
+        "Adverse Drug Reation": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Dose Adjustment/Renal-Hepatic": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Duplication": {
+          "Prescribing": 6,
+          "Transcription & Administration": 1,
+          "Dispensing": 0
+        },
+        "Excess Dose": {
+          "Prescribing": 0,
+          "Transcription & Administration": 4,
+          "Dispensing": 0
+        },
+        "Improper Dose": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Inappropriate Dose": {
+          "Prescribing": 4,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Inappropriate Dose Frequency": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Inappropriate Dose Selection": {
+          "Prescribing": 8,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Mislabeling": {
+          "Prescribing": 0,
+          "Transcription & Administration": 0,
+          "Dispensing": 1
+        },
+        "Monitoring\nSubtheropetic Level": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Wrong Dose/ D.D": {
+          "Prescribing": 0,
+          "Transcription & Administration": 2,
+          "Dispensing": 0
+        },
+        "Wrong Dose/Ed": {
+          "Prescribing": 0,
+          "Transcription & Administration": 1,
+          "Dispensing": 0
+        },
+        "Wrong Drug": {
+          "Prescribing": 0,
+          "Transcription & Administration": 2,
+          "Dispensing": 1
+        },
+        "Wrong Drug*\n(البرنامج الجديد)": {
+          "Prescribing": 0,
+          "Transcription & Administration": 3,
+          "Dispensing": 0
+        },
+        "Wrong Frequency": {
+          "Prescribing": 0,
+          "Transcription & Administration": 4,
+          "Dispensing": 0
+        },
+        "Wrong Iv Rate": {
+          "Prescribing": 0,
+          "Transcription & Administration": 1,
+          "Dispensing": 0
+        },
+        "Wrong Patient": {
+          "Prescribing": 0,
+          "Transcription & Administration": 1,
+          "Dispensing": 0
+        },
+        "Wrong Unit": {
+          "Prescribing": 0,
+          "Transcription & Administration": 1,
+          "Dispensing": 0
+        }
+      },
+      "row_totals": {
+        "Adverse Drug Reation": 1,
+        "Dose Adjustment/Renal-Hepatic": 1,
+        "Duplication": 7,
+        "Excess Dose": 4,
+        "Improper Dose": 1,
+        "Inappropriate Dose": 4,
+        "Inappropriate Dose Frequency": 1,
+        "Inappropriate Dose Selection": 8,
+        "Mislabeling": 1,
+        "Monitoring\nSubtheropetic Level": 1,
+        "Wrong Dose/ D.D": 2,
+        "Wrong Dose/Ed": 1,
+        "Wrong Drug": 3,
+        "Wrong Drug*\n(البرنامج الجديد)": 3,
+        "Wrong Frequency": 4,
+        "Wrong Iv Rate": 1,
+        "Wrong Patient": 1,
+        "Wrong Unit": 1
+      },
+      "col_totals": {
+        "Prescribing": 23,
+        "Transcription & Administration": 20,
+        "Dispensing": 2
+      },
+      "grand_total": 45
+    },
+    "departments_all": {
+      "units": [
+        "4E",
+        "4th ext",
+        "4th new",
+        "4th north",
+        "4th W",
+        "cardiac3",
+        "CSU",
+        "ER",
+        "ER out",
+        "ICU",
+        "ICU ext",
+        "ITCU",
+        "M/S 3rd ext",
+        "New suite",
+        "NICU",
+        "PED",
+        "post csu",
+        "TCU",
+        "Unknown"
+      ],
+      "counts": {
+        "4E": 3,
+        "4th W": 6,
+        "4th ext": 1,
+        "4th new": 1,
+        "4th north": 3,
+        "CSU": 1,
+        "ER": 9,
+        "ER out": 1,
+        "ICU": 1,
+        "ICU ext": 1,
+        "ITCU": 1,
+        "M/S 3rd ext": 2,
+        "NICU": 4,
+        "New suite": 1,
+        "PED": 5,
+        "TCU": 1,
+        "Unknown": 1,
+        "cardiac3": 2,
+        "post csu": 1
+      },
+      "total": 45
+    },
+    "heatmap_cycle_cause": {
+      "Administration": {
+        "Established Treatment Protcol Deviation": 0,
+        "Medication Knowledge Deficiency": 0,
+        "Monitoring": 0,
+        "Non Adherence To Guidelines": 0,
+        "Non Competent Employee": 4,
+        "Work Flow Disruption": 0
+      },
+      "Dispensing": {
+        "Established Treatment Protcol Deviation": 0,
+        "Medication Knowledge Deficiency": 1,
+        "Monitoring": 0,
+        "Non Adherence To Guidelines": 0,
+        "Non Competent Employee": 0,
+        "Work Flow Disruption": 1
+      },
+      "Prescribing": {
+        "Established Treatment Protcol Deviation": 0,
+        "Medication Knowledge Deficiency": 6,
+        "Monitoring": 1,
+        "Non Adherence To Guidelines": 9,
+        "Non Competent Employee": 0,
+        "Work Flow Disruption": 7
+      },
+      "Transcription": {
+        "Established Treatment Protcol Deviation": 1,
+        "Medication Knowledge Deficiency": 6,
+        "Monitoring": 0,
+        "Non Adherence To Guidelines": 0,
+        "Non Competent Employee": 0,
+        "Work Flow Disruption": 9
+      }
+    },
+    "heatmap_cause_cycle": {
+      "Established Treatment Protcol Deviation": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 0,
+        "Transcription": 1
+      },
+      "Medication Knowledge Deficiency": {
+        "Administration": 0,
+        "Dispensing": 1,
+        "Prescribing": 6,
+        "Transcription": 6
+      },
+      "Monitoring": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 1,
+        "Transcription": 0
+      },
+      "Non Adherence To Guidelines": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 9,
+        "Transcription": 0
+      },
+      "Non Competent Employee": {
+        "Administration": 4,
+        "Dispensing": 0,
+        "Prescribing": 0,
+        "Transcription": 0
+      },
+      "Work Flow Disruption": {
+        "Administration": 0,
+        "Dispensing": 1,
+        "Prescribing": 7,
+        "Transcription": 9
+      }
+    },
+    "heatmap_cause_unit": {
+      "Established Treatment Protcol Deviation": {
+        "4E": 0,
+        "4Th Ext": 0,
+        "4Th New": 0,
+        "4Th North": 0,
+        "4Th W": 0,
+        "Cardiac3": 1,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Icu": 0,
+        "Icu Ext": 0,
+        "Itcu": 0,
+        "M/S 3Rd Ext": 0,
+        "New Suite": 0,
+        "Nicu": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0,
+        "Unknown": 0
+      },
+      "Medication Knowledge Deficiency": {
+        "4E": 0,
+        "4Th Ext": 1,
+        "4Th New": 0,
+        "4Th North": 1,
+        "4Th W": 2,
+        "Cardiac3": 0,
+        "Csu": 0,
+        "Er": 2,
+        "Er Out": 0,
+        "Icu": 0,
+        "Icu Ext": 0,
+        "Itcu": 0,
+        "M/S 3Rd Ext": 0,
+        "New Suite": 1,
+        "Nicu": 3,
+        "Ped": 2,
+        "Post Csu": 0,
+        "Tcu": 1,
+        "Unknown": 0
+      },
+      "Monitoring": {
+        "4E": 0,
+        "4Th Ext": 0,
+        "4Th New": 0,
+        "4Th North": 0,
+        "4Th W": 0,
+        "Cardiac3": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Icu": 0,
+        "Icu Ext": 0,
+        "Itcu": 0,
+        "M/S 3Rd Ext": 0,
+        "New Suite": 0,
+        "Nicu": 0,
+        "Ped": 1,
+        "Post Csu": 0,
+        "Tcu": 0,
+        "Unknown": 0
+      },
+      "Non Adherence To Guidelines": {
+        "4E": 3,
+        "4Th Ext": 0,
+        "4Th New": 0,
+        "4Th North": 2,
+        "4Th W": 2,
+        "Cardiac3": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Icu": 0,
+        "Icu Ext": 0,
+        "Itcu": 0,
+        "M/S 3Rd Ext": 0,
+        "New Suite": 0,
+        "Nicu": 0,
+        "Ped": 1,
+        "Post Csu": 0,
+        "Tcu": 0,
+        "Unknown": 1
+      },
+      "Non Competent Employee": {
+        "4E": 0,
+        "4Th Ext": 0,
+        "4Th New": 0,
+        "4Th North": 0,
+        "4Th W": 0,
+        "Cardiac3": 0,
+        "Csu": 0,
+        "Er": 4,
+        "Er Out": 0,
+        "Icu": 0,
+        "Icu Ext": 0,
+        "Itcu": 0,
+        "M/S 3Rd Ext": 0,
+        "New Suite": 0,
+        "Nicu": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0,
+        "Unknown": 0
+      },
+      "Work Flow Disruption": {
+        "4E": 0,
+        "4Th Ext": 0,
+        "4Th New": 1,
+        "4Th North": 0,
+        "4Th W": 2,
+        "Cardiac3": 1,
+        "Csu": 1,
+        "Er": 3,
+        "Er Out": 1,
+        "Icu": 1,
+        "Icu Ext": 1,
+        "Itcu": 1,
+        "M/S 3Rd Ext": 2,
+        "New Suite": 0,
+        "Nicu": 1,
+        "Ped": 1,
+        "Post Csu": 1,
+        "Tcu": 0,
+        "Unknown": 0
+      }
+    },
+    "heatmap_cause_job": {
+      "Established Treatment Protcol Deviation": {
+        "Pharmasist": 0,
+        "Physician": 0,
+        "Rn": 1
+      },
+      "Medication Knowledge Deficiency": {
+        "Pharmasist": 1,
+        "Physician": 6,
+        "Rn": 6
+      },
+      "Monitoring": {
+        "Pharmasist": 0,
+        "Physician": 1,
+        "Rn": 0
+      },
+      "Non Adherence To Guidelines": {
+        "Pharmasist": 0,
+        "Physician": 9,
+        "Rn": 0
+      },
+      "Non Competent Employee": {
+        "Pharmasist": 0,
+        "Physician": 0,
+        "Rn": 4
+      },
+      "Work Flow Disruption": {
+        "Pharmasist": 1,
+        "Physician": 7,
+        "Rn": 9
+      }
+    },
+    "heatmap_cause_shift": {
+      "Established Treatment Protcol Deviation": {
+        "Day": 1,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Medication Knowledge Deficiency": {
+        "Day": 11,
+        "Evening": 1,
+        "Night": 1
+      },
+      "Monitoring": {
+        "Day": 1,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Non Adherence To Guidelines": {
+        "Day": 9,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Non Competent Employee": {
+        "Day": 0,
+        "Evening": 0,
+        "Night": 4
+      },
+      "Work Flow Disruption": {
+        "Day": 12,
+        "Evening": 3,
+        "Night": 2
+      }
+    }
+  },
+  "records": []
+}

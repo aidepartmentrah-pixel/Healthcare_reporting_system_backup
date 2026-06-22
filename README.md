@@ -163,21 +163,23 @@ The Admin Panel lets authorized users change KPI target values for all modules a
 
 **Access:** Navigate to `/admin` in the browser (e.g. `http://localhost:3000/admin`).
 
-### Default Credentials
+### Authentication
+
+The system uses a **single unified login** for both the frontend and the admin panel. Credentials are validated against the backend on every login — no credentials are stored in the browser.
 
 | Field | Default value |
 |-------|--------------|
 | Username | `admin` |
-| Password | `admin123` |
+| Password | *(set during first setup — stored hashed in `admin.json`)* |
 
-> Change these immediately after first login using the **Change Credentials** form.
+> Change your password immediately after first login using **Settings → Change Credentials**.
 
 ### What you can do
 
 | Action | Description |
 |--------|-------------|
-| **Edit targets** | Update the KPI target rates for Mortality, Medication Error, VAP, CLABSI, and CAUTI. Changes take effect immediately across all dashboards. |
-| **Change credentials** | Set a new admin username and password. All active sessions are invalidated and you must log in again with the new credentials. |
+| **Edit targets** | Update KPI target rates for Mortality, Medication Error, VAP, CLABSI, and CAUTI. Changes take effect immediately across all dashboards. |
+| **Change credentials** | Set a new username and password. All active sessions are invalidated and you must log in again. |
 
 ### Default Target Values
 
@@ -185,15 +187,15 @@ The Admin Panel lets authorized users change KPI target values for all modules a
 |--------|-------|---------|
 | Mortality | Mortality Rate | 2.0 % |
 | Medication Error | Error Rate | 0.03 % |
-| VAP | Per-floor target rates | ICU 25‰ · CCU 15‰ · CSU 9.5‰ · Ped 5.5‰ · ICN 10‰ · ITU 25‰ · Neonatal 0‰ |
-| CLABSI | Per-floor target rates | Same as VAP floor list |
-| CAUTI | Per-floor target rates | Same as VAP floor list |
+| VAP | Per-floor target rates | ICU 25‰ · CCU 15‰ · CSU 9.5‰ · Ped 5.5‰ · ICN 10‰ · ITU 25‰ |
+| CLABSI | Per-floor target rates | ICU 10‰ · CCU 9‰ · CSU 4‰ · ICN 14‰ |
+| CAUTI | Per-floor target rates | ICU 4.5‰ · CCU 4.5‰ · CSU 4.5‰ · Ped 1.6‰ · ICN 4.5‰ |
 
 ### How it works
 
-- Targets are stored in `python-service/storage/config/targets.json` and loaded by dashboards on every visit.
-- Admin credentials are stored as a salted PBKDF2-SHA256 hash in `python-service/storage/config/admin.json` — the plaintext password is never stored.
-- Login issues a short-lived in-memory Bearer token. The token is lost on server restart, requiring a fresh login.
+- Targets stored in `python-service/storage/config/targets.json`, loaded on every dashboard visit.
+- Admin credentials stored as a salted SHA-256 hash in `python-service/storage/config/admin.json` — plaintext is never stored.
+- Login issues a short-lived in-memory Bearer token (lost on server restart).
 - Changing credentials immediately invalidates all active sessions.
 
 ---
@@ -705,17 +707,20 @@ Or edit the `candidates` list in `_load_llm()` in each AI service file.
 
 ## History & Storage
 
-Each module stores quarterly data in a JSON file. Uploading a quarter that already exists **overwrites** it. New quarters are appended in chronological order.
+Each module stores quarterly data in two tiers:
 
-| Module | History File | Current File |
-|--------|-------------|-------------|
-| Mortality | `storage/data/mortality_history.json` | — |
-| VAP | `storage/data/VAP_history.json` | `storage/data/VAP_current.json` |
-| CLABSI | `storage/data/clabsi_history.json` | `storage/data/clabsi_current.json` |
-| CAUTI | `storage/data/cauti_history.json` | `storage/data/cauti_current.json` |
-| Medication Error | `storage/data/medication_error_history.json` | — |
+- **History file** — lean summary per quarter (rates, counts, germ distributions). Used for trend charts. Never trimmed.
+- **Per-quarter files** — full data (individual case rows, complete statistics) for each of the last **8 quarters**. Oldest file is deleted automatically when the 9th quarter is uploaded.
 
-The `*_current.json` files (IC modules only) store the raw case rows from the last uploaded quarter. These are read by the report generator to build per-patient case tables without needing to re-upload the Excel file.
+| Module | History File | Per-quarter Directory |
+|--------|-------------|----------------------|
+| Mortality | `storage/data/mortality_history.json` | `storage/data/mortality/quarters/` |
+| VAP | `storage/data/VAP_history.json` | `storage/data/VAP/cases/` |
+| CLABSI | `storage/data/clabsi_history.json` | `storage/data/CLABSI/cases/` |
+| CAUTI | `storage/data/cauti_history.json` | `storage/data/CAUTI/cases/` |
+| Medication Error | `storage/data/medication_error_history.json` | `storage/data/medication/quarters/` |
+
+Per-quarter files are named `{year}_Q{n}.json` (e.g. `2025_Q3.json`). The dashboard's quarter selector reads the available files and lets the user switch between any of the last 8 quarters. The selected quarter is also used when generating a report — downloading the report always uses whichever quarter is currently selected in the top-of-page selector.
 
 **VAP history entry example:**
 ```json

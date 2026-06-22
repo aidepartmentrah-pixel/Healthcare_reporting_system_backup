@@ -34,30 +34,54 @@ COL_MAP: Dict[str, str] = {
     "age/year":                        "age",
     "diagnosis":                       "diagnosis",
     "date of admission":               "date_of_admission",
+    "admission date":                  "date_of_admission",
     "date of insertion central line":  "date_of_insertion",
     "date of /intubation /insertion":  "date_of_insertion",
     "date of intubation/insertion":    "date_of_insertion",
     "date of intubation / insertion":  "date_of_insertion",
+    "intubation date/ insertion":      "date_of_insertion",
+    "intubation date/insertion":       "date_of_insertion",
     "تاريخ التنبيب":                   "date_of_insertion",
     "date of infection":               "date_of_infection",
+    "infection date":                  "date_of_infection",
     "germs":                           "germs",
     "type of line":                    "type_of_line",
     "gender":                          "gender",
     "diabetic":                        "diabetic",
+    "diabetes":                        "diabetic",
     "hypertension":                    "hypertension",
     "dyslipidemia":                    "dyslipidemia",
     "heart disease":                   "heart_disease",
     "kidney disease":                  "kidney_disease",
     "copd":                            "copd",
     "smoker":                          "smoker",
+    "smoking":                         "smoker",
     "obesity":                         "obesity",
-    "cardiac congenital malformation": "cardiac_congenital_malformation",
+    "cardiac congenital malformation":  "cardiac_congenital_malformation",
+    "&cardiac congenital malformation": "cardiac_congenital_malformation",
     "advanced age":                    "advanced_age",
     "length of stay":                  "length_of_stay",
     "duration of catheter":            "duration_of_catheter",
     "cancer":                          "cancer",
-    "compromised immune system":       "compromised_immune_system",
-    "respiratory pb":                  "respiratory_pb",
+    "compromised immune system":        "compromised_immune_system",
+    "respiratory pb":                   "respiratory_pb",
+    "readmission date":                    "readmission_date",
+    "discharge date":                      "discharge_date",
+    "inserted by":                         "inserted_by",
+    "location of insertion/intubation":    "location_of_insertion",
+    "/removal catheter tube date":         "removal_date",
+    "dwell time":                          "dwell_time",
+    "prematurity":                         "prematurity",
+    "neonates":                            "neonates",
+    "infant":                              "infant",
+    "total parenteral nutrition (tpn)":    "total_parenteral_nutrition",
+    "consciousness":                       "consciousness",
+    "head trauma":                         "head_trauma",
+    "burns":                               "burns",
+    "malnutrition":                        "malnutrition",
+    "prolonged antibiotic exposure":       "prolonged_antibiotic_exposure",
+    "reintubat/ion recatheterization":     "reintubation_recatheterization",
+    "tracheostomy":                        "tracheostomy",
 }
 
 RISK_FACTOR_COLS = [
@@ -66,6 +90,10 @@ RISK_FACTOR_COLS = [
     "cardiac_congenital_malformation", "advanced_age",
     "length_of_stay", "duration_of_catheter",
     "cancer", "compromised_immune_system", "respiratory_pb",
+    "prematurity", "neonates", "infant", "total_parenteral_nutrition",
+    "consciousness", "head_trauma", "burns", "malnutrition",
+    "prolonged_antibiotic_exposure", "reintubation_recatheterization",
+    "tracheostomy",
 ]
 
 
@@ -232,28 +260,38 @@ def process_clabsi_excel(file_path: str, year: int, quarter: int, denominators: 
         if all(sheet.cell(r, c).value is None for c in range(1, sheet.max_column + 1)):
             continue
 
-        insertion = _parse_date(get(r, "date_of_insertion"))
-        infection = _parse_date(get(r, "date_of_infection"))
-        admission = _parse_date(get(r, "date_of_admission"))
-        age       = _parse_age(get(r, "age"))
+        insertion   = _parse_date(get(r, "date_of_insertion"))
+        infection   = _parse_date(get(r, "date_of_infection"))
+        admission   = _parse_date(get(r, "date_of_admission"))
+        readmission = _parse_date(get(r, "readmission_date"))
+        discharge   = _parse_date(get(r, "discharge_date"))
+        removal     = _parse_date(get(r, "removal_date"))
+        age         = _parse_age(get(r, "age"))
 
         case: Dict = {
-            "case_number":       get(r, "case_number"),
-            "nb_of_cases":       get(r, "nb_of_cases"),
-            "year":              get(r, "year") or year,
-            "semester":          get(r, "semester"),
-            "floor":             get(r, "floor"),
-            "age":               age,
-            "age_display":       _age_display(age),
-            "gender":            get(r, "gender"),
-            "diagnosis":         get(r, "diagnosis"),
-            "germs":             get(r, "germs"),
-            "type_of_line":      get(r, "type_of_line"),
-            "date_of_admission": str(admission)  if admission  else None,
-            "date_of_insertion": str(insertion)  if insertion  else None,
-            "date_of_infection": str(infection)  if infection  else None,
-            "infection_month":   infection.strftime("%Y-%m") if infection else None,
-            "catheter_duration": _days_between(insertion, infection),
+            "case_number":           get(r, "case_number"),
+            "nb_of_cases":           get(r, "nb_of_cases"),
+            "year":                  get(r, "year") or year,
+            "semester":              get(r, "semester"),
+            "type_of_infection":     get(r, "type_of_infection"),
+            "floor":                 get(r, "floor"),
+            "age":                   age,
+            "age_display":           _age_display(age),
+            "gender":                get(r, "gender"),
+            "diagnosis":             get(r, "diagnosis"),
+            "germs":                 get(r, "germs"),
+            "type_of_line":          get(r, "type_of_line"),
+            "date_of_admission":     str(admission)   if admission   else None,
+            "readmission_date":      str(readmission) if readmission else None,
+            "discharge_date":        str(discharge)   if discharge   else None,
+            "date_of_insertion":     str(insertion)   if insertion   else None,
+            "removal_date":          str(removal)     if removal     else None,
+            "date_of_infection":     str(infection)   if infection   else None,
+            "infection_month":       infection.strftime("%Y-%m") if infection else None,
+            "catheter_duration":     _days_between(insertion, infection),
+            "dwell_time":            _safe(get(r, "dwell_time")),
+            "inserted_by":           get(r, "inserted_by"),
+            "location_of_insertion": get(r, "location_of_insertion"),
             **{col: _yes_no(get(r, col)) for col in RISK_FACTOR_COLS},
         }
         cases.append(case)

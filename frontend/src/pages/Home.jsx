@@ -11,7 +11,9 @@ function Home({ language }) {
     <div className={styles.homeContainer}>
       {/* Hero Header */}
       <div className={styles.hero}>
-        <div className={styles.heroIcon}>🏥</div>
+        <div className={styles.heroIcon}>
+          <img src="/LOGO_ICON.png" alt="logo" style={{ width: '110px', height: '110px', objectFit: 'contain' }} />
+        </div>
         <h1 className={styles.heroTitle}>
           {t('homeTitle')}
         </h1>
@@ -26,10 +28,10 @@ function Home({ language }) {
         {/* Mortality Card */}
         <button
           className={`${styles.systemCard} ${styles.mortalityCard}`}
-          onClick={() => navigate('/mortality/upload')}
+          onClick={() => navigate('/mortality/dashboard')}
         >
           <div className={styles.cardGlow} />
-          <div className={styles.cardIcon}>💀</div>
+          <div className={styles.cardIcon}>🏥</div>
           <h2 className={styles.cardTitle}>
             {t('mortalityCardTitle')}
           </h2>
@@ -50,7 +52,7 @@ function Home({ language }) {
         {/* Medication Error Card */}
         <button
           className={`${styles.systemCard} ${styles.medicationCard}`}
-          onClick={() => navigate('/medication/upload')}
+          onClick={() => navigate('/medication/dashboard')}
         >
           <div className={styles.cardGlow} />
           <div className={styles.cardIcon}>💊</div>
@@ -84,19 +86,19 @@ function Home({ language }) {
           <div className={styles.cardFeatures}>
             <button
               className={styles.indicatorBtn}
-              onClick={() => navigate('/vap/upload')}
+              onClick={() => navigate('/vap/dashboard')}
             >
               🫁 VAP
             </button>
             <button
               className={styles.indicatorBtn}
-              onClick={() => navigate('/clabsi/upload')}
+              onClick={() => navigate('/clabsi/dashboard')}
             >
               🩸 CLABSI
             </button>
             <button
               className={styles.indicatorBtn}
-              onClick={() => navigate('/cauti/upload')}
+              onClick={() => navigate('/cauti/dashboard')}
             >
               🧫 CAUTI
             </button>

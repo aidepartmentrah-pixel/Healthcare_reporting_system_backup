@@ -586,8 +586,6 @@ class ICAIService:
                 n_batch=2048,
                 use_mlock=False,
                 n_gpu_layers=-1,
-                offload_kqv=True,
-                flash_attn=True,
                 verbose=False,
             )
             logger.info(f"ICAIService: loaded {model_path}")

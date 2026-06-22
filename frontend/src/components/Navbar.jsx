@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-function Navbar({ language, toggleLanguage }) {
+function Navbar({ language, toggleLanguage, isAuthenticated, onLogout }) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ function Navbar({ language, toggleLanguage }) {
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
         >
           <div className="logo">
-            <span className="logo-icon">🏥</span>
+            <img src="/LOGO.png" alt="logo" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
           </div>
           <div className="brand-text">
             <h1 className="brand-title">
@@ -53,14 +53,18 @@ function Navbar({ language, toggleLanguage }) {
                 <span className="nav-icon">📊</span>
                 <span>{t('dashboard')}</span>
               </NavLink>
-              <NavLink to="/mortality/upload" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon">📤</span>
-                <span>{t('upload')}</span>
-              </NavLink>
-              <NavLink to="/mortality/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon">📄</span>
-                <span>{t('reports')}</span>
-              </NavLink>
+              {isAuthenticated && (
+                <>
+                  <NavLink to="/mortality/upload" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <span className="nav-icon">📤</span>
+                    <span>{t('upload')}</span>
+                  </NavLink>
+                  <NavLink to="/mortality/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <span className="nav-icon">📄</span>
+                    <span>{t('reports')}</span>
+                  </NavLink>
+                </>
+              )}
             </>
           )}
 
@@ -71,14 +75,18 @@ function Navbar({ language, toggleLanguage }) {
                 <span className="nav-icon">📊</span>
                 <span>{t('navDashboard')}</span>
               </NavLink>
-              <NavLink to="/vap/upload" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon">📤</span>
-                <span>{t('navUpload')}</span>
-              </NavLink>
-              <NavLink to="/vap/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon">📄</span>
-                <span>{t('navReports')}</span>
-              </NavLink>
+              {isAuthenticated && (
+                <>
+                  <NavLink to="/vap/upload" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <span className="nav-icon">📤</span>
+                    <span>{t('navUpload')}</span>
+                  </NavLink>
+                  <NavLink to="/vap/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <span className="nav-icon">📄</span>
+                    <span>{t('navReports')}</span>
+                  </NavLink>
+                </>
+              )}
             </>
           )}
 
@@ -89,14 +97,18 @@ function Navbar({ language, toggleLanguage }) {
                 <span className="nav-icon">📊</span>
                 <span>{t('navDashboard')}</span>
               </NavLink>
-              <NavLink to="/clabsi/upload" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon">📤</span>
-                <span>{t('navUpload')}</span>
-              </NavLink>
-              <NavLink to="/clabsi/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon">📄</span>
-                <span>{t('navReports')}</span>
-              </NavLink>
+              {isAuthenticated && (
+                <>
+                  <NavLink to="/clabsi/upload" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <span className="nav-icon">📤</span>
+                    <span>{t('navUpload')}</span>
+                  </NavLink>
+                  <NavLink to="/clabsi/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <span className="nav-icon">📄</span>
+                    <span>{t('navReports')}</span>
+                  </NavLink>
+                </>
+              )}
             </>
           )}
 
@@ -107,14 +119,18 @@ function Navbar({ language, toggleLanguage }) {
                 <span className="nav-icon">📊</span>
                 <span>{t('navDashboard')}</span>
               </NavLink>
-              <NavLink to="/cauti/upload" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon">📤</span>
-                <span>{t('navUpload')}</span>
-              </NavLink>
-              <NavLink to="/cauti/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon">📄</span>
-                <span>{t('navReports')}</span>
-              </NavLink>
+              {isAuthenticated && (
+                <>
+                  <NavLink to="/cauti/upload" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <span className="nav-icon">📤</span>
+                    <span>{t('navUpload')}</span>
+                  </NavLink>
+                  <NavLink to="/cauti/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <span className="nav-icon">📄</span>
+                    <span>{t('navReports')}</span>
+                  </NavLink>
+                </>
+              )}
             </>
           )}
 
@@ -125,14 +141,18 @@ function Navbar({ language, toggleLanguage }) {
                 <span className="nav-icon">📊</span>
                 <span>{t('navDashboard')}</span>
               </NavLink>
-              <NavLink to="/medication/upload" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon">📤</span>
-                <span>{t('navUpload')}</span>
-              </NavLink>
-              <NavLink to="/medication/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon">📄</span>
-                <span>{t('navReports')}</span>
-              </NavLink>
+              {isAuthenticated && (
+                <>
+                  <NavLink to="/medication/upload" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <span className="nav-icon">📤</span>
+                    <span>{t('navUpload')}</span>
+                  </NavLink>
+                  <NavLink to="/medication/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <span className="nav-icon">📄</span>
+                    <span>{t('navReports')}</span>
+                  </NavLink>
+                </>
+              )}
             </>
           )}
 
@@ -141,6 +161,42 @@ function Navbar({ language, toggleLanguage }) {
             <span className="globe-icon">🌐</span>
             <span>{ar ? 'EN' : 'ع'}</span>
           </button>
+
+          {/* Settings icon — authenticated only */}
+          {isAuthenticated && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="language-toggle"
+              style={{ color: '#0f766e' }}
+              title={t('navSettings')}
+            >
+              <span>⚙️</span>
+              <span>{t('navSettings')}</span>
+            </button>
+          )}
+
+          {/* Auth button */}
+          {isAuthenticated ? (
+            <button
+              onClick={onLogout}
+              className="language-toggle"
+              style={{ color: '#dc2626' }}
+              title={t('navLogout')}
+            >
+              <span>🔓</span>
+              <span>{t('navLogout')}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              className="language-toggle"
+              style={{ color: '#1e40af' }}
+              title={t('navLogin')}
+            >
+              <span>🔑</span>
+              <span>{t('navLogin')}</span>
+            </button>
+          )}
         </div>
       </div>
     </nav>

@@ -7,7 +7,7 @@ import { API_MEDICATION as API_URL } from '../../config/api';
 const TEAL = 'linear-gradient(135deg, #0d9488 0%, #0891b2 100%)';
 const TEAL_DARK = '#0f766e';
 
-function MedicationReports({ language, currentData }) {
+function MedicationReports({ language, currentData, selectedQ }) {
   const { t, i18n } = useTranslation();
   const ar = i18n.language === 'ar';
   const [reportType, setReportType] = useState('summary');
@@ -22,15 +22,27 @@ function MedicationReports({ language, currentData }) {
       .then(res => {
         const entries = Array.isArray(res.data) ? res.data : [];
         setHistory(entries);
-        setSelectedIndex(entries.length > 0 ? entries.length - 1 : 0);
+        // Prefer the top-of-page selected quarter, then current data, then last entry
+        const preferred = selectedQ || (currentData?.quarter ? { quarter: currentData.quarter, year: String(currentData.year) } : null);
+        const idx = preferred
+          ? entries.findIndex(e => e.quarter === preferred.quarter && String(e.year) === String(preferred.year))
+          : -1;
+        setSelectedIndex(idx >= 0 ? idx : entries.length > 0 ? entries.length - 1 : 0);
       })
       .catch(err => console.error('Failed to load medication history:', err))
       .finally(() => setLoading(false));
   }, []);
 
+  // Sync when selectedQ changes (user selects from top-of-page selector while on this page)
+  useEffect(() => {
+    if (!selectedQ || !history.length) return;
+    const idx = history.findIndex(e => e.quarter === selectedQ.quarter && String(e.year) === String(selectedQ.year));
+    if (idx >= 0) setSelectedIndex(idx);
+  }, [selectedQ, history]);
+
   // Sync selected index to last uploaded quarter whenever currentData or history changes
   useEffect(() => {
-    if (!currentData?.quarter || history.length === 0) return;
+    if (selectedQ || !currentData?.quarter || history.length === 0) return;
     const idx = history.findIndex(
       e => e.quarter === currentData.quarter && String(e.year) === String(currentData.year)
     );

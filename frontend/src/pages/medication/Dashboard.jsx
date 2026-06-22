@@ -144,14 +144,14 @@ function MedicationGauge({ rate, target }) {
           x2={100 - 80 * Math.cos(Math.PI * tgtPct)} y2={100 - 80 * Math.sin(Math.PI * tgtPct)}
           stroke={AMBER} strokeWidth="4" strokeLinecap="round" />
         <text x="100" y="82" textAnchor="middle" fontSize="22" fontWeight="800" fill={isAbove ? RED : GREEN}>{rate.toFixed(4)}%</text>
-        <text x="100" y="98" textAnchor="middle" fontSize="10" fill="#94a3b8">target {target}%</text>
+        <text x="100" y="14" textAnchor="middle" fontSize="10" fontWeight="600" fill="#92400e">target {target}%</text>
       </svg>
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: isAbove ? '#fef2f2' : '#f0fdf4', color: isAbove ? '#dc2626' : '#16a34a', borderRadius: 20, padding: '5px 16px', fontSize: 12, fontWeight: 700, marginTop: 6 }}>
         {isAbove ? '▲ Above Target' : '▼ Below Target'}
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 14, fontSize: 12, color: SLATE }}>
         {[
-          { label: 'Actual', value: `${rate.toFixed(4)}%`, color: isAbove ? RED : GREEN },
+          { label: 'Result', value: `${rate.toFixed(4)}%`, color: isAbove ? RED : GREEN },
           { label: 'Target', value: `${target}%`, color: AMBER },
           { label: isAbove ? 'Over' : 'Under', value: `${Math.abs(rate - target).toFixed(4)}%`, color: isAbove ? RED : GREEN },
         ].map((item, i, arr) => (
@@ -664,10 +664,10 @@ function MedicationDashboard({ language, data, medicationTarget = 0.03 }) {
                       <YAxis hide domain={[0, Math.max(...trendQuarters.map(q => q.error_rate), TARGET) * 1.4]} />
                       <Tooltip {...TS} formatter={v => [`${v.toFixed(4)}%`]} />
                       <Legend verticalAlign="top" height={28} />
-                      <Line type="monotone" dataKey="rate" name="Actual" stroke={BLUE} strokeWidth={2.5}
+                      <Line type="monotone" dataKey="rate" name="Result" stroke={BLUE} strokeWidth={2.5}
                         dot={{ r: 4, fill: BLUE }}
                         label={{ position: 'top', fontSize: 10, fontWeight: 700, fill: BLUE, formatter: v => `${v.toFixed(4)}%` }} />
-                      <Line type="monotone" dataKey="target" name="Target" stroke={RED} strokeDasharray="6 3" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="target" name="Target" stroke="#92400e" strokeDasharray="6 3" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>

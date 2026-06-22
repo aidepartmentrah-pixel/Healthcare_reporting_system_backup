@@ -29,6 +29,9 @@ const RISK_COLS = [
   'copd','smoker','obesity','cardiac_congenital_malformation','advanced_age',
   'length_of_stay','duration_of_catheter',
   'cancer','compromised_immune_system','respiratory_pb',
+  'prematurity','neonates','infant','total_parenteral_nutrition',
+  'consciousness','head_trauma','burns','malnutrition',
+  'prolonged_antibiotic_exposure','reintubation_recatheterization','tracheostomy',
 ];
 const RISK_LABELS_EN = {
   diabetic:'Diabetic', hypertension:'Hypertension', dyslipidemia:'Dyslipidemia',
@@ -37,6 +40,11 @@ const RISK_LABELS_EN = {
   advanced_age:'Advanced Age', length_of_stay:'Length of Stay',
   duration_of_catheter:'Duration of Catheter', cancer:'Cancer',
   compromised_immune_system:'Compromised Immune System', respiratory_pb:'Respiratory Problem',
+  prematurity:'Prematurity', neonates:'Neonates', infant:'Infant',
+  total_parenteral_nutrition:'Total Parenteral Nutrition (TPN)',
+  consciousness:'Consciousness', head_trauma:'Head Trauma', burns:'Burns',
+  malnutrition:'Malnutrition', prolonged_antibiotic_exposure:'Prolonged Antibiotic Exposure',
+  reintubation_recatheterization:'Reintubation / Recatheterization', tracheostomy:'Tracheostomy',
 };
 const getRiskFactors = c =>
   RISK_COLS.filter(k => c[k] === true || c[k] === 'Yes' || c[k] === 'yes')
@@ -81,6 +89,16 @@ function qLabel(q, y, t) {
   return `${label} ${y}`;
 }
 
+const shortQ = (quarter) => {
+  const map = {
+    "الفصل الأول": "Q1", "الفصل الاول": "Q1",
+    "الفصل الثاني": "Q2",
+    "الفصل الثالث": "Q3",
+    "الفصل الرابع": "Q4",
+  };
+  return map[quarter] || quarter;
+};
+
 /* ── Semicircle Gauge ── */
 function DepartmentGauge({ name, rate, target }) {
   const { t } = useTranslation();
@@ -110,7 +128,7 @@ function DepartmentGauge({ name, rate, target }) {
         <text x="100" y="82" textAnchor="middle" fontSize="22" fontWeight="800" fill={isAbove ? RED : GREEN}>
           {rate.toFixed(2)}‰
         </text>
-        <text x="100" y="98" textAnchor="middle" fontSize="10" fill="#94a3b8">
+        <text x="100" y="14" textAnchor="middle" fontSize="10" fontWeight="600" fill="#92400e">
           {t("vapTarget")} {target}‰
         </text>
       </svg>
@@ -119,7 +137,7 @@ function DepartmentGauge({ name, rate, target }) {
       </div>
       <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 16, fontSize: 12, color: SLATE }}>
         {[
-          { label: t("vapActual"),                              value: `${rate.toFixed(2)}‰`, color: isAbove ? RED : GREEN },
+          { label: "Result",                              value: `${rate.toFixed(2)}‰`, color: isAbove ? RED : GREEN },
           { label: t("vapTargetLabel"),                         value: `${target}‰`,          color: AMBER },
           { label: isAbove ? t("vapOver") : t("vapUnder"),     value: `${Math.abs(rate - target).toFixed(2)}‰`, color: isAbove ? RED : GREEN },
         ].map((item, i, arr) => (
@@ -137,12 +155,13 @@ function DepartmentGauge({ name, rate, target }) {
 }
 
 /* ── Dashboard ── */
-function ClabsiDashboard() {
+function ClabsiDashboard({ selectedQuarter }) {
   const { t, i18n } = useTranslation();
   const ar = i18n.language === 'ar';
   const [history,     setHistory]     = useState([]);
   const [currentData, setCurrentData] = useState(null);
   const [targets,     setTargets]     = useState({});
+  const [casesData,   setCasesData]   = useState(null);
   const [loading,     setLoading]     = useState(true);
 
   useEffect(() => {
@@ -160,11 +179,24 @@ function ClabsiDashboard() {
       .catch(err => { console.error("Dashboard error:", err); setLoading(false); });
   }, []);
 
+  useEffect(() => {
+    if (!selectedQuarter) return;
+    const QUARTER_AR = { '1': 'الفصل الاول', '2': 'الفصل الثاني', '3': 'الفصل الثالث', '4': 'الفصل الرابع' };
+    const q = QUARTER_AR[String(selectedQuarter.quarter)] || selectedQuarter.quarter;
+    setCasesData(null);
+    fetch(`${API_URL}/cases?quarter=${encodeURIComponent(q)}&year=${selectedQuarter.year}`)
+      .then(r => r.json())
+      .then(data => setCasesData(data))
+      .catch(() => {});
+  }, [selectedQuarter?.quarter, selectedQuarter?.year]);
+
   if (loading) return <div className={styles.emptyState}>{t("clabsiLoadingText")}</div>;
 
-  const latestHistory = (currentData?.quarter && currentData?.year)
-    ? (history.find(h => h.quarter === currentData.quarter && String(h.year) === String(currentData.year)) || history[history.length - 1])
-    : history[history.length - 1];
+  const latestHistory = selectedQuarter
+    ? (history.find(h => h.quarter === selectedQuarter.quarter && String(h.year) === String(selectedQuarter.year)) || history[history.length - 1])
+    : (currentData?.quarter && currentData?.year)
+      ? (history.find(h => h.quarter === currentData.quarter && String(h.year) === String(currentData.year)) || history[history.length - 1])
+      : history[history.length - 1];
   if (!latestHistory?.summary) {
     return <div className={styles.emptyState}><h2>{t("clabsiNoData")}</h2></div>;
   }
@@ -174,6 +206,13 @@ function ClabsiDashboard() {
   const activeFloors   = Object.keys(targets).filter(dept =>
     history.some(q => (q.summary?.[dept]?.cases || 0) > 0)
   );
+  const noTargetFloors = (() => {
+    const all = new Set();
+    history.forEach(q => Object.keys(q.summary || {}).forEach(dept => {
+      if ((q.summary[dept]?.cases || 0) > 0) all.add(dept);
+    }));
+    return [...all].filter(dept => !targets[dept]);
+  })();
   const displayHistory = history.slice(-4);
   const summaryHistory = history.slice(-6);
 
@@ -255,6 +294,43 @@ function ClabsiDashboard() {
                   })}
                 </tr>
               ))}
+
+              {noTargetFloors.map((dept) => (
+                <tr key={`nt-${dept}`} style={{ background: "#fffbeb" }}>
+                  <td style={{ ...tdStyle, fontWeight: 600, color: "#92400e", minWidth: 50 }}>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <span>{dept}</span>
+                      <span style={{ fontSize: "12px", color: "#b45309", marginTop: 2 }}>
+                        {t('noTargetDefined')}
+                      </span>
+                    </div>
+                  </td>
+                  {summaryHistory.map((q, colIndex) => {
+                    const cases = q.summary?.[dept]?.cases ?? null;
+                    return (
+                      <td key={colIndex} style={{ ...tdStyle, textAlign: "center", background: "#fffbeb" }}>
+                        {cases != null
+                          ? <div style={{ fontWeight: 700, color: "#92400e" }}>{cases}</div>
+                          : "—"}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+
+              <tr style={{ background: "#eff6ff", borderTop: "2px solid #bfdbfe" }}>
+                <td style={{ ...tdStyle, fontWeight: 700, color: "#1e3a8a", minWidth: 50 }}>
+                  {t('totalCasesRow')}
+                </td>
+                {summaryHistory.map((q, colIndex) => {
+                  const total = Object.values(q.summary || {}).reduce((s, v) => s + (v.cases || 0), 0);
+                  return (
+                    <td key={colIndex} style={{ ...tdStyle, textAlign: "center", fontWeight: 800, color: "#1e3a8a" }}>
+                      {total}
+                    </td>
+                  );
+                })}
+              </tr>
             </tbody>
           </table>
         </div>
@@ -280,26 +356,42 @@ function ClabsiDashboard() {
           const cx = x + width / 2;
           return (
             <g>
-              <text x={cx} y={y - 20} textAnchor="middle" fontSize={10} fontWeight={700} fill="#1e293b">
+              <text x={cx} y={y - 46} textAnchor="middle" fontSize={10} fontWeight={700} fill="#1e293b">
                 {Number(d.rate ?? 0).toFixed(1)}‰
               </text>
-              <text x={cx} y={y - 7} textAnchor="middle" fontSize={9} fill="#64748b">
+              <text x={cx} y={y - 33} textAnchor="middle" fontSize={9} fill="#64748b">
                 ({d.cases ?? 0})
+              </text>
+              <text x={cx} y={y - 18} textAnchor="middle" fontSize={9} fill="#92400e" fontWeight={600}>
+                Target: {d.target}‰
               </text>
             </g>
           );
         };
 
         return (
-          <div id="clabsi-floor-comparison" style={{ background: "#ffffff", borderRadius: "14px",
+          <div id="clabsi-floor-comparison" dir="ltr" style={{ background: "#ffffff", borderRadius: "14px",
                         boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
                         padding: "1.5rem", marginBottom: "2rem", marginTop: "2rem" }}>
             <h3 style={{ margin: "0 0 1rem", color: "#1e3a8a" }}>
               {t('clabsiDashboardTitle')} — {t('floorRateComparison')} ({qLabel(latestHistory.quarter, latestHistory.year, t)})
             </h3>
+            <div style={{ position: 'relative' }}>
+              <div style={{ position: 'absolute', top: 0, right: 0, zIndex: 1, display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'flex-start', background: 'rgba(255,255,255,0.92)', padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                {[
+                  { label: 'Favorable', color: GREEN },
+                  { label: 'Non Favorable', color: RED },
+                  { label: t('vapTargetLabel'), color: '#92400e' },
+                ].map(item => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                    <div style={{ width: 12, height: 12, background: item.color, borderRadius: 2, flexShrink: 0 }} />
+                    <span style={{ color: '#374151', fontWeight: 500 }}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
             <ResponsiveContainer width="100%" height={chartHeight}>
               <BarChart data={floorBarData}
-                        margin={{ top: 44, right: 20, left: 0, bottom: 8 }}
+                        margin={{ top: 64, right: 20, left: 0, bottom: 8 }}
                         barCategoryGap="25%">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis dataKey="floor"
@@ -315,31 +407,26 @@ function ClabsiDashboard() {
                     const rateRow   = payload.find(p => p.dataKey === 'rate');
                     const targetRow = payload.find(p => p.dataKey === 'target');
                     const cases     = rateRow?.payload?.cases ?? 0;
+                    const isFavorable = (rateRow?.payload?.rate ?? 0) <= (rateRow?.payload?.target ?? 0);
+                    const rateLabel = isFavorable ? 'Favorable' : 'Non Favorable';
+                    const rateColor = isFavorable ? GREEN : RED;
                     return (
                       <div style={{ ...TS.contentStyle, minWidth: 170 }}>
                         <div style={{ fontWeight: 700, marginBottom: 6, color: '#1e293b' }}>{label}</div>
                         {rateRow && (
-                          <div style={{ color: rateRow.fill, marginBottom: 3 }}>
-                            {t('vapActualRate')}: {Number(rateRow.value).toFixed(2)}‰
+                          <div style={{ color: rateColor, marginBottom: 3 }}>
+                            {rateLabel}: {Number(rateRow.value).toFixed(2)}‰
                             <span style={{ color: '#64748b', marginLeft: 6 }}>({cases} cases)</span>
                           </div>
                         )}
                         {targetRow && (
-                          <div style={{ color: AMBER }}>
+                          <div style={{ color: '#92400e' }}>
                             {t('vapTargetLabel')}: {targetRow.value}‰
                           </div>
                         )}
                       </div>
                     );
                   }}
-                />
-                <Legend
-                  verticalAlign="top" height={36}
-                  payload={[
-                    { value: `${t('vapActualRate')} (≤ ${t('vapTargetLabel')})`, type: 'square', color: GREEN },
-                    { value: `${t('vapActualRate')} (> ${t('vapTargetLabel')})`, type: 'square', color: RED },
-                    { value: t('vapTargetLabel'),                                  type: 'square', color: AMBER },
-                  ]}
                 />
                 <Bar dataKey="rate" name={t('vapActualRate')}
                      radius={[6, 6, 0, 0]} maxBarSize={maxBarSize}>
@@ -350,14 +437,11 @@ function ClabsiDashboard() {
                   <LabelList content={RateLabel} />
                 </Bar>
                 <Bar dataKey="target" name={t('vapTargetLabel')}
-                     fill={AMBER} fillOpacity={0.45} radius={[6, 6, 0, 0]}
-                     maxBarSize={maxBarSize}>
-                  <LabelList dataKey="target" position="top"
-                             formatter={v => `${v}‰`}
-                             style={{ fontSize: 10, fill: AMBER }} />
-                </Bar>
+                     fill="#92400e" radius={[6, 6, 0, 0]}
+                     maxBarSize={maxBarSize} />
               </BarChart>
             </ResponsiveContainer>
+            </div>
           </div>
         );
       })()}
@@ -374,18 +458,18 @@ function ClabsiDashboard() {
             target: targets[dept],
           }));
 
-          const deptCases = (currentData?.cases || []).filter(c => c.floor === dept);
-
-          /* Germ heatmap — include ALL history quarters, empty germs show as blank */
+          /* Germ heatmap — uses casesData (selected Q) for the current extra column */
+          const casesQSrc = casesData || currentData;
+          const deptCasesForHeatmap = (casesQSrc?.cases || []).filter(c => c.floor === dept);
           const currentGerms = {};
-          deptCases.forEach(c => {
+          deptCasesForHeatmap.forEach(c => {
             const g = c.germs;
             if (g) currentGerms[g] = (currentGerms[g] || 0) + (c.nb_of_cases || 1);
           });
           const hasCurrentGerms = Object.keys(currentGerms).length > 0;
 
-          const currentQKey = hasCurrentGerms
-            ? qLabel(currentData.quarter, currentData.year, t)
+          const currentQKey = (hasCurrentGerms && casesQSrc)
+            ? qLabel(casesQSrc.quarter, casesQSrc.year, t)
             : null;
           const histAllKeys = displayHistory.map(q => qLabel(q.quarter, q.year, t));
           const currentAlreadyInHistory = currentQKey && histAllKeys.includes(currentQKey);
@@ -399,12 +483,15 @@ function ClabsiDashboard() {
             ...(hasCurrentGerms && !currentAlreadyInHistory ? [{
               key:   currentQKey,
               germs: currentGerms,
-              cases: deptCases.reduce((s, c) => s + (c.nb_of_cases || 1), 0),
+              cases: deptCasesForHeatmap.reduce((s, c) => s + (c.nb_of_cases || 1), 0),
             }] : []),
           ];
 
           const quarterKeys = heatmapQuarters.map(q => q.key);
-          const latestQKey  = quarterKeys[quarterKeys.length - 1];
+          const selQLabel = selectedQuarter ? qLabel(selectedQuarter.quarter, selectedQuarter.year, t) : null;
+          const latestQKey = (selQLabel && quarterKeys.includes(selQLabel))
+            ? selQLabel
+            : quarterKeys[quarterKeys.length - 1];
 
           const germMap = new Map();
           heatmapQuarters.forEach(q => {
@@ -430,7 +517,7 @@ function ClabsiDashboard() {
           const getColor = (pct, qk) => {
             const n = pct / maxPercent;
             const s = { r: 219, g: 234, b: 254 };
-            const e = { r: 30,  g: 64,  b: 175 };
+            const e = { r: 59,  g: 130, b: 246 };
             let r = Math.round(s.r + (e.r - s.r) * n);
             let g = Math.round(s.g + (e.g - s.g) * n);
             let b = Math.round(s.b + (e.b - s.b) * n);
@@ -439,9 +526,9 @@ function ClabsiDashboard() {
           };
           const heatTextColor = (pct) => {
             const n = pct / maxPercent;
-            const lum = 0.2126 * (219 + (30  - 219) * n) / 255
-                      + 0.7152 * (234 + (64  - 234) * n) / 255
-                      + 0.0722 * (254 + (175 - 254) * n) / 255;
+            const lum = 0.2126 * (219 + (59  - 219) * n) / 255
+                      + 0.7152 * (234 + (130 - 234) * n) / 255
+                      + 0.0722 * (254 + (246 - 254) * n) / 255;
             return lum < 0.45 ? '#fff' : '#1e293b';
           };
 
@@ -466,11 +553,11 @@ function ClabsiDashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                       <XAxis dataKey="label" interval={0} angle={-30} textAnchor="end" height={75} tick={{ fontSize: 9 }} padding={{ right: 30 }} />
                       <YAxis hide />
-                      <Tooltip {...TS} formatter={(v, n) => [`${v.toFixed(2)}‰`, n === "rate" ? t("vapActual") : t("vapTargetLabel")]} />
+                      <Tooltip {...TS} formatter={(v, n) => [`${v.toFixed(2)}‰`, n]} />
                       <Legend verticalAlign="top" height={30} />
-                      <Line type="monotone" dataKey="rate" name={t("vapActualRate")} stroke="#2563eb" strokeWidth={2.5} dot={{ r: 4, fill: "#2563eb" }}
+                      <Line type="monotone" dataKey="rate" name="Result" stroke="#2563eb" strokeWidth={2.5} dot={{ r: 4, fill: "#2563eb" }}
                         label={{ position: "top", fontSize: 10, fontWeight: 700, fill: "#2563eb", formatter: v => `${v.toFixed(1)}‰` }} />
-                      <Line type="monotone" dataKey="target" name={t("vapTargetLabel")} stroke={RED} strokeDasharray="6 3" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="target" name={t("vapTargetLabel")} stroke="#92400e" strokeDasharray="6 3" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -490,9 +577,9 @@ function ClabsiDashboard() {
                           {quarterKeys.map(q => {
                             const cell = row.values[q] || { count: 0, percent: 0 };
                             return (
-                              <div key={q} style={{ background: getColor(cell.percent, q), borderRadius: 8, padding: 8, textAlign: "center", fontSize: 11, fontWeight: 600, color: heatTextColor(cell.percent) }}>
+                              <div key={q} style={{ background: getColor(cell.percent, q), borderRadius: 8, padding: 8, textAlign: "center", fontSize: 13, fontWeight: 700, color: heatTextColor(cell.percent) }}>
                                 {cell.count}
-                                <div style={{ fontSize: 10 }}>({cell.percent.toFixed(0)}%)</div>
+                                <div style={{ fontSize: 12 }}>({cell.percent.toFixed(0)}%)</div>
                               </div>
                             );
                           })}
@@ -503,14 +590,59 @@ function ClabsiDashboard() {
                 </div>
               )}
 
+              {/* ── Risk Factor Summary Table ── */}
+              {(() => {
+                const rfCases = (casesData?.cases || currentData?.cases || []).filter(c => c.floor === dept);
+                if (!rfCases.length) return null;
+                const total = rfCases.length;
+                const rows = RISK_COLS
+                  .map(k => ({ label: RISK_LABELS_EN[k], count: rfCases.filter(c => c[k] === true || c[k] === 'Yes' || c[k] === 'yes').length }))
+                  .filter(r => r.count > 0)
+                  .sort((a, b) => b.count - a.count);
+                if (!rows.length) return null;
+                const thS = { padding: '9px 10px', textAlign: 'start', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap', borderBottom: '2px solid #93c5fd', background: '#dbeafe' };
+                const tdS = { padding: '8px 10px', borderBottom: '1px solid #e2e8f0', verticalAlign: 'middle' };
+                return (
+                  <div style={{ marginBottom: '2rem' }} dir={ar ? 'rtl' : 'ltr'}>
+                    <h3 style={{ marginBottom: 12, color: '#1e3a8a' }}>
+                      {ar ? `عوامل الخطر — ${dept}` : `Risk Factors — ${dept}`}
+                    </h3>
+                    <div style={{ overflowX: 'auto', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                        <thead>
+                          <tr>
+                            <th style={thS}>{ar ? 'عامل الخطر' : 'Risk Factor'}</th>
+                            <th style={{ ...thS, textAlign: 'center' }}>{ar ? 'عدد الحالات' : 'Cases'}</th>
+                            <th style={{ ...thS, textAlign: 'center' }}>{ar ? 'النسبة' : 'Percentage'}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map((row, i) => (
+                            <tr key={row.label} style={{ background: i % 2 === 0 ? '#fff' : '#eff6ff' }}>
+                              <td style={tdS}>{row.label}</td>
+                              <td style={{ ...tdS, textAlign: 'center', fontWeight: 700 }}>{row.count}</td>
+                              <td style={{ ...tdS, textAlign: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <div style={{ flex: 1, background: '#f1f5f9', borderRadius: 4, height: 8, overflow: 'hidden' }}>
+                                    <div style={{ width: `${(row.count / total * 100).toFixed(0)}%`, height: '100%', background: '#2563eb', borderRadius: 4 }} />
+                                  </div>
+                                  <span style={{ minWidth: 44, textAlign: 'right', fontWeight: 600, color: '#374151' }}>
+                                    {(row.count / total * 100).toFixed(1)}%
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* ── Detailed Cases Table ── */}
               {(() => {
-                const floorCases = deptCases;
-                if (!floorCases.length) return null;
-                const quarterMismatch = currentData && (
-                  currentData.quarter !== latestHistory.quarter ||
-                  String(currentData.year) !== String(latestHistory.year)
-                );
+                const tableCases = (casesData?.cases || currentData?.cases || []).filter(c => c.floor === dept);
                 const thS = { padding: '9px 10px', textAlign: 'start', fontWeight: 700,
                               color: '#1e3a8a', whiteSpace: 'nowrap',
                               borderBottom: '2px solid #93c5fd', background: '#dbeafe' };
@@ -524,20 +656,21 @@ function ClabsiDashboard() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                       <h3 style={{ margin: 0, color: '#1e3a8a' }}>
                         {ar ? `حالات مفصلة — ${dept}` : `Detailed Cases — ${dept}`}
-                        <span style={{ fontSize: 13, fontWeight: 400, color: SLATE, marginInlineStart: 8 }}>
-                          ({currentData?.quarter} {currentData?.year})
-                        </span>
+                        {(casesData || currentData) && (
+                          <span style={{ fontSize: 13, fontWeight: 400, color: SLATE, marginInlineStart: 8 }}>
+                            {(() => { const s = casesData || currentData; return `(${s.quarter} ${s.year})`; })()}
+                          </span>
+                        )}
                       </h3>
-                      {quarterMismatch && (
-                        <span style={{ fontSize: 11, color: '#b45309', background: '#fef3c7',
-                                       padding: '2px 8px', borderRadius: 6 }}>
-                          {ar ? '⚠ البيانات من آخر رفع' : '⚠ Cases from most recent upload'}
-                        </span>
-                      )}
                       <span style={{ marginInlineStart: 'auto', fontSize: 12, color: SLATE }}>
-                        {ar ? `${floorCases.length} حالة` : `${floorCases.length} case${floorCases.length !== 1 ? 's' : ''}`}
+                        {ar ? `${tableCases.length} حالة` : `${tableCases.length} case${tableCases.length !== 1 ? 's' : ''}`}
                       </span>
                     </div>
+                    {!tableCases.length ? (
+                      <p style={{ color: SLATE, fontSize: 13 }}>
+                        {ar ? 'لا توجد حالات لهذا القسم في الفصل المختار.' : 'No cases for this department in the selected quarter.'}
+                      </p>
+                    ) : (
                     <div style={{ overflowX: 'auto', borderRadius: 10,
                                   boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' }}>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }} dir={ar ? 'rtl' : 'ltr'}>
@@ -547,7 +680,7 @@ function ClabsiDashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {floorCases.map((c, i) => (
+                          {tableCases.map((c, i) => (
                             <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#f0f7ff' }}>
                               <td style={{ ...tdS, fontWeight: 600, whiteSpace: 'nowrap' }}>
                                 {fmtNum(c.case_number) !== '—' ? fmtNum(c.case_number) : i + 1}
@@ -569,6 +702,7 @@ function ClabsiDashboard() {
                         </tbody>
                       </table>
                     </div>
+                    )}
                   </div>
                 );
               })()}

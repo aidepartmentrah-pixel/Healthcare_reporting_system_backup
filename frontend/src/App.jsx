@@ -1,5 +1,5 @@
 import { useState, useEffect, Component } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import './i18n/config';
 import './App.css';
@@ -26,6 +26,10 @@ class ErrorBoundary extends Component {
 }
 
 import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import QuarterSelector from './components/QuarterSelector';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Pages
 import Home from './pages/Home';
@@ -42,6 +46,132 @@ import ClabsiDashboard from './pages/infection_control/clabsi/Dashboard';
 import CautiDashboard from './pages/infection_control/cauti/Dashboard';
 import AdminPage from './pages/admin/AdminPage';
 
+// ─── Quarter-selector wrappers ───────────────────────────────────────────────
+
+function MortalityDashboardWrapper({ mortalityData, historyData, mortalityTarget, selectedQ, onSelectQ }) {
+  const [quarters, setQuarters] = useState([]);
+  const [activeData, setActiveData] = useState(mortalityData);
+  const [fetching, setFetching]  = useState(false);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/available-quarters')
+      .then(r => r.json())
+      .then(q => Array.isArray(q) ? setQuarters(q) : null)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (selectedQ === null) setActiveData(mortalityData);
+  }, [mortalityData, selectedQ]);
+
+  function handleSelect(q) {
+    onSelectQ(q);
+    if (!q) { setActiveData(mortalityData); return; }
+    setFetching(true);
+    fetch(`http://localhost:8000/api/quarter?q=${encodeURIComponent(q.quarter)}&year=${q.year}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setActiveData(d); })
+      .catch(() => {})
+      .finally(() => setFetching(false));
+  }
+
+  return (
+    <>
+      {quarters.length > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 1rem 0.75rem' }}>
+          <QuarterSelector quarters={quarters} selected={selectedQ} onChange={handleSelect} loading={fetching} />
+        </div>
+      )}
+      <Dashboard
+        data={activeData}
+        totalPatients={activeData?.totalPatients || 0}
+        quarter={activeData?.quarter || ''}
+        year={activeData?.year || ''}
+        historyData={historyData}
+        mortalityTarget={mortalityTarget}
+      />
+    </>
+  );
+}
+
+function MedicationDashboardWrapper({ medicationData, medicationTarget, language, selectedQ, onSelectQ }) {
+  const [quarters, setQuarters] = useState([]);
+  const [activeData, setActiveData] = useState(medicationData);
+  const [fetching, setFetching]  = useState(false);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/medication/available-quarters')
+      .then(r => r.json())
+      .then(q => Array.isArray(q) ? setQuarters(q) : null)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (selectedQ === null) setActiveData(medicationData);
+  }, [medicationData, selectedQ]);
+
+  function handleSelect(q) {
+    onSelectQ(q);
+    if (!q) { setActiveData(medicationData); return; }
+    setFetching(true);
+    fetch(`http://localhost:8000/api/medication/quarter?q=${encodeURIComponent(q.quarter)}&year=${q.year}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setActiveData(d); })
+      .catch(() => {})
+      .finally(() => setFetching(false));
+  }
+
+  return (
+    <>
+      {quarters.length > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 1rem 0.75rem' }}>
+          <QuarterSelector quarters={quarters} selected={selectedQ} onChange={handleSelect} loading={fetching} />
+        </div>
+      )}
+      <MedicationDashboard language={language} data={activeData} medicationTarget={medicationTarget} />
+    </>
+  );
+}
+
+function IcWrapper({ language, DashboardComponent, apiUrl, selectedQ, onSelectQ }) {
+  const [quarters, setQuarters] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // After a successful upload the upload page navigates here with ?quarter=...&year=...
+  // Pick those up to auto-select the newly uploaded quarter, then clear the params.
+  useEffect(() => {
+    const urlQ = searchParams.get('quarter');
+    const urlY = searchParams.get('year');
+    if (urlQ && urlY) {
+      onSelectQ({ quarter: urlQ, year: urlY });
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
+
+  useEffect(() => {
+    fetch(`${apiUrl}/history`)
+      .then(r => r.json())
+      .then(hist => {
+        if (Array.isArray(hist) && hist.length > 0) {
+          const qs = hist.map(h => ({ quarter: h.quarter, year: String(h.year) }));
+          setQuarters(qs.slice(-4));
+        }
+      })
+      .catch(() => {});
+  }, [apiUrl]);
+
+  return (
+    <>
+      {quarters.length > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 1rem 0.75rem' }}>
+          <QuarterSelector quarters={quarters} selected={selectedQ} onChange={onSelectQ} />
+        </div>
+      )}
+      <DashboardComponent language={language} selectedQuarter={selectedQ} />
+    </>
+  );
+}
+
 // ─── Main App ───────────────────────────────────────────────────────────────
 function App() {
   const { t, i18n } = useTranslation();
@@ -50,6 +180,12 @@ function App() {
   const [historyData, setHistoryData] = useState([]);
   const [medicationData, setMedicationData] = useState(null);
   const [targets, setTargets] = useState({});
+  // Selected quarters — persist across navigation between dashboard and reports
+  const [mortalitySelectedQ,  setMortalitySelectedQ]  = useState(null);
+  const [medicationSelectedQ, setMedicationSelectedQ] = useState(null);
+  const [vapSelectedQ,        setVapSelectedQ]        = useState(null);
+  const [clabsiSelectedQ,     setClabsiSelectedQ]     = useState(null);
+  const [cautiSelectedQ,      setCautiSelectedQ]      = useState(null);
 
   useEffect(() => {
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
@@ -95,78 +231,147 @@ function App() {
     i18n.changeLanguage(newLang);
   };
 
+  const shellProps = {
+    language, toggleLanguage,
+    mortalityData, setMortalityData,
+    historyData,
+    medicationData, setMedicationData,
+    targets, t,
+    mortalitySelectedQ,  setMortalitySelectedQ,
+    medicationSelectedQ, setMedicationSelectedQ,
+    vapSelectedQ,        setVapSelectedQ,
+    clabsiSelectedQ,     setClabsiSelectedQ,
+    cautiSelectedQ,      setCautiSelectedQ,
+  };
+
   return (
     <Router>
-      <div className="app">
-        <Navbar language={language} toggleLanguage={toggleLanguage} />
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="*" element={<AppShell {...shellProps} />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
+}
 
-        <main className="main-content">
-          <div className="content-wrapper">
-            <ErrorBoundary>
+function AppShell({
+  language, toggleLanguage,
+  mortalityData, setMortalityData,
+  historyData,
+  medicationData, setMedicationData,
+  targets, t,
+  mortalitySelectedQ,  setMortalitySelectedQ,
+  medicationSelectedQ, setMedicationSelectedQ,
+  vapSelectedQ,        setVapSelectedQ,
+  clabsiSelectedQ,     setClabsiSelectedQ,
+  cautiSelectedQ,      setCautiSelectedQ,
+}) {
+  const { isAuthenticated, logout } = useAuth();
+
+  return (
+    <div className="app">
+      <Navbar
+        language={language}
+        toggleLanguage={toggleLanguage}
+        isAuthenticated={isAuthenticated}
+        onLogout={logout}
+      />
+
+      <main className="main-content">
+        <div className="content-wrapper">
+          <ErrorBoundary>
             <Routes>
-              {/* ── Admin ── */}
-              <Route path="/admin" element={<AdminPage />} />
-
-              {/* ── Home: system selector ── */}
+              {/* ── Public: Home ── */}
               <Route path="/" element={<Home language={language} />} />
 
-              {/* ── Mortality system ── */}
+              {/* ── Public: Dashboards ── */}
               <Route path="/mortality/dashboard" element={
-                <Dashboard
-                  data={mortalityData}
-                  totalPatients={mortalityData?.totalPatients || 0}
-                  quarter={mortalityData?.quarter || ''}
-                  year={mortalityData?.year || ''}
+                <MortalityDashboardWrapper
+                  mortalityData={mortalityData}
                   historyData={historyData}
                   mortalityTarget={targets?.mortality?.rate ?? 2}
+                  selectedQ={mortalitySelectedQ}
+                  onSelectQ={setMortalitySelectedQ}
                 />
               } />
+              <Route path="/vap/dashboard" element={
+                <IcWrapper language={language} DashboardComponent={VapDashboard}
+                  apiUrl="http://localhost:8000/api/vap"
+                  selectedQ={vapSelectedQ} onSelectQ={setVapSelectedQ} />
+              } />
+              <Route path="/clabsi/dashboard" element={
+                <IcWrapper language={language} DashboardComponent={ClabsiDashboard}
+                  apiUrl="http://localhost:8000/api/clabsi"
+                  selectedQ={clabsiSelectedQ} onSelectQ={setClabsiSelectedQ} />
+              } />
+              <Route path="/cauti/dashboard" element={
+                <IcWrapper language={language} DashboardComponent={CautiDashboard}
+                  apiUrl="http://localhost:8000/api/cauti"
+                  selectedQ={cautiSelectedQ} onSelectQ={setCautiSelectedQ} />
+              } />
+              <Route path="/medication/dashboard" element={
+                <MedicationDashboardWrapper
+                  medicationData={medicationData}
+                  medicationTarget={targets?.medication?.error_rate ?? 0.03}
+                  language={language}
+                  selectedQ={medicationSelectedQ}
+                  onSelectQ={setMedicationSelectedQ}
+                />
+              } />
+
+              {/* ── Protected: Admin ── */}
+              <Route path="/admin" element={
+                <ProtectedRoute><AdminPage /></ProtectedRoute>
+              } />
+
+              {/* ── Protected: Uploads ── */}
               <Route path="/mortality/upload" element={
-                <Upload onDataLoaded={setMortalityData} />
+                <ProtectedRoute>
+                  <Upload onDataLoaded={data => { setMortalityData(data); setMortalitySelectedQ(null); }} />
+                </ProtectedRoute>
               } />
-              <Route path="/mortality/reports" element={
-                <Reports data={mortalityData} language={language} />
+              <Route path="/vap/upload" element={
+                <ProtectedRoute><InfectionControlUpload defaultTab="vap" language={language} /></ProtectedRoute>
               } />
-
-              {/* ── Infection Control / VAP ── */}
-              <Route path="/vap/upload"     element={<InfectionControlUpload defaultTab="vap" language={language} />} />
-              <Route path="/vap/dashboard"  element={<VapDashboard language={language} />} />
-              <Route path="/vap/reports"    element={<InfectionControlReports type="vap" language={language} />} />
-
-              {/* ── Infection Control / CLABSI ── */}
-              <Route path="/clabsi/upload"    element={<InfectionControlUpload defaultTab="clabsi" language={language} />} />
-              <Route path="/clabsi/dashboard" element={<ClabsiDashboard language={language} />} />
-              <Route path="/clabsi/reports"   element={<InfectionControlReports type="clabsi" language={language} />} />
-
-              {/* ── Infection Control / CAUTI ── */}
-              <Route path="/cauti/upload"    element={<InfectionControlUpload defaultTab="cauti" language={language} />} />
-              <Route path="/cauti/dashboard" element={<CautiDashboard language={language} />} />
-              <Route path="/cauti/reports"   element={<InfectionControlReports type="cauti" language={language} />} />
-
-              {/* ── Medication Error system ── */}
+              <Route path="/clabsi/upload" element={
+                <ProtectedRoute><InfectionControlUpload defaultTab="clabsi" language={language} /></ProtectedRoute>
+              } />
+              <Route path="/cauti/upload" element={
+                <ProtectedRoute><InfectionControlUpload defaultTab="cauti" language={language} /></ProtectedRoute>
+              } />
               <Route path="/medication/upload" element={
-                  <MedicationUpload language={language} onDataLoaded={setMedicationData} />
-                } />
+                <ProtectedRoute>
+                  <MedicationUpload language={language} onDataLoaded={data => { setMedicationData(data); setMedicationSelectedQ(null); }} />
+                </ProtectedRoute>
+              } />
 
-                <Route path="/medication/dashboard" element={
-                  <MedicationDashboard language={language} data={medicationData} medicationTarget={targets?.medication?.error_rate ?? 0.03} />
-                } />
+              {/* ── Protected: Reports (contain downloads) ── */}
+              <Route path="/mortality/reports" element={
+                <ProtectedRoute><Reports data={mortalityData} language={language} selectedQ={mortalitySelectedQ} /></ProtectedRoute>
+              } />
+              <Route path="/vap/reports" element={
+                <ProtectedRoute><InfectionControlReports type="vap" language={language} selectedQ={vapSelectedQ} /></ProtectedRoute>
+              } />
+              <Route path="/clabsi/reports" element={
+                <ProtectedRoute><InfectionControlReports type="clabsi" language={language} selectedQ={clabsiSelectedQ} /></ProtectedRoute>
+              } />
+              <Route path="/cauti/reports" element={
+                <ProtectedRoute><InfectionControlReports type="cauti" language={language} selectedQ={cautiSelectedQ} /></ProtectedRoute>
+              } />
+              <Route path="/medication/reports" element={
+                <ProtectedRoute><MedicationReports language={language} currentData={medicationData} selectedQ={medicationSelectedQ} /></ProtectedRoute>
+              } />
+            </Routes>
+          </ErrorBoundary>
+        </div>
+      </main>
 
-                <Route path="/medication/reports" element={
-                  <MedicationReports language={language} currentData={medicationData} />
-                } />
-              </Routes>
-            </ErrorBoundary>
-          </div>
-        </main>
-
-        <footer className="footer">
-          <p className="footer-text">
-            {t('footerText')}
-          </p>
-        </footer>
-      </div>
-    </Router>
+      <footer className="footer">
+        <p className="footer-text">{t('footerText')}</p>
+      </footer>
+    </div>
   );
 }
 

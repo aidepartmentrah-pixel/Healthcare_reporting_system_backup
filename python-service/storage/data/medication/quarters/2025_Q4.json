@@ -1,0 +1,1247 @@
+{
+  "quarter": "الفصل الرابع",
+  "year": "2025",
+  "statistics": {
+    "summary": {
+      "quarter": "الفصل الرابع",
+      "year": 2025,
+      "error_rate": 0.017,
+      "total_errors": 79,
+      "total_doses": 464706,
+      "target": 0.03
+    },
+    "error_cycle": {
+      "counts": {
+        "Administration": 4,
+        "Dispensing": 3,
+        "Prescribing": 62,
+        "Transcription": 10
+      },
+      "percentages": {
+        "Administration": 5.1,
+        "Dispensing": 3.8,
+        "Prescribing": 78.5,
+        "Transcription": 12.7
+      },
+      "total": 79
+    },
+    "detected_by": {
+      "counts": {
+        "HN check up": 1,
+        "Lab results were checked by Pharmacist": 5,
+        "Pharmacist checked Physician order(Request)": 32,
+        "Pharmacist checkup": 33,
+        "RN check up": 3,
+        "RN incharge check up": 2,
+        "RN midnight check up": 1,
+        "physician order (request)": 1,
+        "pt's file audit by HN": 1
+      },
+      "percentages": {
+        "HN check up": 1.3,
+        "Lab results were checked by Pharmacist": 6.3,
+        "Pharmacist checked Physician order(Request)": 40.5,
+        "Pharmacist checkup": 41.8,
+        "RN check up": 3.8,
+        "RN incharge check up": 2.5,
+        "RN midnight check up": 1.3,
+        "physician order (request)": 1.3,
+        "pt's file audit by HN": 1.3
+      },
+      "total": 79
+    },
+    "duty_shift": {
+      "counts": {
+        "DAY": 72,
+        "Evening": 5,
+        "Night": 2
+      },
+      "percentages": {
+        "DAY": 91.1,
+        "Evening": 6.3,
+        "Night": 2.5
+      },
+      "total": 79
+    },
+    "staff_involved": {
+      "counts": {
+        "Dr.": 62,
+        "RN": 14,
+        "pharmasist": 3
+      },
+      "percentages": {
+        "Dr.": 78.5,
+        "RN": 17.7,
+        "pharmasist": 3.8
+      },
+      "total": 79
+    },
+    "error_causes": {
+      "counts": {
+        "Calculation error": 3,
+        "Communication(Verbal/Written)": 1,
+        "Decimal point": 2,
+        "Documentation error": 1,
+        "established nursing policy deviation/ orientee": 2,
+        "established pharmacy policy deviation": 1,
+        "look-alike medication": 2,
+        "Medication knowledge Deficiency": 1,
+        "Medication knowledge Deficiency/Appropriate dosing /dosing guidelines": 1,
+        "Medication knowledge Deficiency/Available dosage forms": 1,
+        "Medication knowledge Deficiency/Indications for medication use": 1,
+        "memory lapse": 2,
+        "Non adherence to guidelines": 32,
+        "Patient knowledge Deficiency/Lab values /clinical information not available/not noted": 6,
+        "Poor nurse's/Physician medication knowledge": 7,
+        "SYSTEM ERROR": 4,
+        "Work flow disruption": 12
+      },
+      "percentages": {
+        "Calculation error": 3.8,
+        "Communication(Verbal/Written)": 1.3,
+        "Decimal point": 2.5,
+        "Documentation error": 1.3,
+        "established nursing policy deviation/ orientee": 2.5,
+        "established pharmacy policy deviation": 1.3,
+        "look-alike medication": 2.5,
+        "Medication knowledge Deficiency": 1.3,
+        "Medication knowledge Deficiency/Appropriate dosing /dosing guidelines": 1.3,
+        "Medication knowledge Deficiency/Available dosage forms": 1.3,
+        "Medication knowledge Deficiency/Indications for medication use": 1.3,
+        "memory lapse": 2.5,
+        "Non adherence to guidelines": 40.5,
+        "Patient knowledge Deficiency/Lab values /clinical information not available/not noted": 7.6,
+        "Poor nurse's/Physician medication knowledge": 8.9,
+        "SYSTEM ERROR": 5.1,
+        "Work flow disruption": 15.2
+      },
+      "total": 79
+    },
+    "error_types": {
+      "counts": {
+        "Improper dose (over, under or extra dose) ": 25,
+        "Inappropriate drug selection": 12,
+        "Omission error(No drug for medical condition) ": 9,
+        "wrong drug": 5,
+        "Dose adjustment/renal-hepatic": 4,
+        "Wrong drug / ": 4,
+        "Contraindication ": 3,
+        "Wrong frequency ": 3,
+        "Duplication": 2,
+        "duplication of request": 2
+      },
+      "percentages": {
+        "Improper dose (over, under or extra dose) ": 36.2,
+        "Inappropriate drug selection": 17.4,
+        "Omission error(No drug for medical condition) ": 13.0,
+        "wrong drug": 7.2,
+        "Dose adjustment/renal-hepatic": 5.8,
+        "Wrong drug / ": 5.8,
+        "Contraindication ": 4.3,
+        "Wrong frequency ": 4.3,
+        "Duplication": 2.9,
+        "duplication of request": 2.9
+      },
+      "total": 69
+    },
+    "departments": {
+      "counts": {
+        "ICU": 23,
+        "4th W": 8,
+        "M/S 4th E": 7,
+        "CSU": 5,
+        "ER": 5,
+        "New suite": 5,
+        "TCU": 5,
+        "M/S 4th N": 3,
+        "PED": 3,
+        "Card1, P.CSU": 2,
+        "ER-ped": 2,
+        "ICN": 2,
+        "new suite": 2,
+        "CCU": 1,
+        "ER out": 1,
+        "M/S 3rd ext": 1,
+        "M/S 4th ext": 1,
+        "M/S card2": 1,
+        "M/S new card": 1,
+        "post csu": 1
+      },
+      "percentages": {
+        "ICU": 29.1,
+        "4th W": 10.1,
+        "M/S 4th E": 8.9,
+        "CSU": 6.3,
+        "ER": 6.3,
+        "New suite": 6.3,
+        "TCU": 6.3,
+        "M/S 4th N": 3.8,
+        "PED": 3.8,
+        "Card1, P.CSU": 2.5,
+        "ER-ped": 2.5,
+        "ICN": 2.5,
+        "new suite": 2.5,
+        "CCU": 1.3,
+        "ER out": 1.3,
+        "M/S 3rd ext": 1.3,
+        "M/S 4th ext": 1.3,
+        "M/S card2": 1.3,
+        "M/S new card": 1.3,
+        "post csu": 1.3
+      },
+      "total": 79
+    },
+    "ncc_merp": {
+      "counts": {
+        "Category B": 32,
+        "Category C": 46,
+        "Category D": 1
+      },
+      "percentages": {
+        "Category B": 40.5,
+        "Category C": 58.2,
+        "Category D": 1.3
+      },
+      "total": 79
+    },
+    "cause_stage_matrix": {
+      "causes": [
+        "Non Adherence To Guidelines",
+        "Work Flow Disruption",
+        "Poor Nurse'S/Physician Medication Knowledge",
+        "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted",
+        "System Error",
+        "Calculation Error",
+        "Decimal Point",
+        "Established Nursing Policy Deviation/ Orientee",
+        "Look-Alike Medication",
+        "Memory Lapse",
+        "Communication(Verbal/Written)",
+        "Documentation Error",
+        "Established Pharmacy Policy Deviation",
+        "Medication Knowledge Deficiency",
+        "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines",
+        "Medication Knowledge Deficiency/Available Dosage Forms",
+        "Medication Knowledge Deficiency/Indications For Medication Use"
+      ],
+      "stages": [
+        "Prescribing",
+        "Transcription & Administration",
+        "Dispensing"
+      ],
+      "matrix": {
+        "Calculation Error": {
+          "Prescribing": 3,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Communication(Verbal/Written)": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Decimal Point": {
+          "Prescribing": 1,
+          "Transcription & Administration": 1,
+          "Dispensing": 0
+        },
+        "Documentation Error": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Established Nursing Policy Deviation/ Orientee": {
+          "Prescribing": 0,
+          "Transcription & Administration": 2,
+          "Dispensing": 0
+        },
+        "Established Pharmacy Policy Deviation": {
+          "Prescribing": 0,
+          "Transcription & Administration": 0,
+          "Dispensing": 1
+        },
+        "Look-Alike Medication": {
+          "Prescribing": 0,
+          "Transcription & Administration": 0,
+          "Dispensing": 2
+        },
+        "Medication Knowledge Deficiency": {
+          "Prescribing": 0,
+          "Transcription & Administration": 1,
+          "Dispensing": 0
+        },
+        "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Medication Knowledge Deficiency/Available Dosage Forms": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Medication Knowledge Deficiency/Indications For Medication Use": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Memory Lapse": {
+          "Prescribing": 1,
+          "Transcription & Administration": 1,
+          "Dispensing": 0
+        },
+        "Non Adherence To Guidelines": {
+          "Prescribing": 27,
+          "Transcription & Administration": 5,
+          "Dispensing": 0
+        },
+        "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted": {
+          "Prescribing": 6,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Poor Nurse'S/Physician Medication Knowledge": {
+          "Prescribing": 7,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "System Error": {
+          "Prescribing": 0,
+          "Transcription & Administration": 4,
+          "Dispensing": 0
+        },
+        "Work Flow Disruption": {
+          "Prescribing": 12,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        }
+      },
+      "row_totals": {
+        "Calculation Error": 3,
+        "Communication(Verbal/Written)": 1,
+        "Decimal Point": 2,
+        "Documentation Error": 1,
+        "Established Nursing Policy Deviation/ Orientee": 2,
+        "Established Pharmacy Policy Deviation": 1,
+        "Look-Alike Medication": 2,
+        "Medication Knowledge Deficiency": 1,
+        "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines": 1,
+        "Medication Knowledge Deficiency/Available Dosage Forms": 1,
+        "Medication Knowledge Deficiency/Indications For Medication Use": 1,
+        "Memory Lapse": 2,
+        "Non Adherence To Guidelines": 32,
+        "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted": 6,
+        "Poor Nurse'S/Physician Medication Knowledge": 7,
+        "System Error": 4,
+        "Work Flow Disruption": 12
+      },
+      "col_totals": {
+        "Prescribing": 62,
+        "Transcription & Administration": 14,
+        "Dispensing": 3
+      },
+      "grand_total": 79
+    },
+    "type_stage_matrix": {
+      "types": [
+        "Improper Dose (Over, Under Or Extra Dose)",
+        "Inappropriate Drug Selection",
+        "Omission Error(No Drug For Medical Condition)",
+        "Wrong Drug",
+        "Dose Adjustment/Renal-Hepatic",
+        "Wrong Drug /",
+        "Contraindication",
+        "Wrong Frequency",
+        "Duplication",
+        "Duplication Of Request",
+        "Wrong Dose/ Excess",
+        "Wrong Patient",
+        "Wrong Route",
+        "Mislabeling",
+        "Monitoring Errors - Drug – Drug Interaction",
+        "Wrong Duration",
+        "Wrong Rate Of Infusion"
+      ],
+      "stages": [
+        "Prescribing",
+        "Transcription & Administration",
+        "Dispensing"
+      ],
+      "matrix": {
+        "Contraindication": {
+          "Prescribing": 3,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Dose Adjustment/Renal-Hepatic": {
+          "Prescribing": 4,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Duplication": {
+          "Prescribing": 2,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Duplication Of Request": {
+          "Prescribing": 0,
+          "Transcription & Administration": 2,
+          "Dispensing": 0
+        },
+        "Improper Dose (Over, Under Or Extra Dose)": {
+          "Prescribing": 25,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Inappropriate Drug Selection": {
+          "Prescribing": 12,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Mislabeling": {
+          "Prescribing": 0,
+          "Transcription & Administration": 0,
+          "Dispensing": 1
+        },
+        "Monitoring Errors - Drug – Drug Interaction": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Omission Error(No Drug For Medical Condition)": {
+          "Prescribing": 9,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Wrong Dose/ Excess": {
+          "Prescribing": 0,
+          "Transcription & Administration": 2,
+          "Dispensing": 0
+        },
+        "Wrong Drug": {
+          "Prescribing": 0,
+          "Transcription & Administration": 3,
+          "Dispensing": 2
+        },
+        "Wrong Drug /": {
+          "Prescribing": 1,
+          "Transcription & Administration": 3,
+          "Dispensing": 0
+        },
+        "Wrong Duration": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Wrong Frequency": {
+          "Prescribing": 3,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Wrong Patient": {
+          "Prescribing": 0,
+          "Transcription & Administration": 2,
+          "Dispensing": 0
+        },
+        "Wrong Rate Of Infusion": {
+          "Prescribing": 1,
+          "Transcription & Administration": 0,
+          "Dispensing": 0
+        },
+        "Wrong Route": {
+          "Prescribing": 0,
+          "Transcription & Administration": 2,
+          "Dispensing": 0
+        }
+      },
+      "row_totals": {
+        "Contraindication": 3,
+        "Dose Adjustment/Renal-Hepatic": 4,
+        "Duplication": 2,
+        "Duplication Of Request": 2,
+        "Improper Dose (Over, Under Or Extra Dose)": 25,
+        "Inappropriate Drug Selection": 12,
+        "Mislabeling": 1,
+        "Monitoring Errors - Drug – Drug Interaction": 1,
+        "Omission Error(No Drug For Medical Condition)": 9,
+        "Wrong Dose/ Excess": 2,
+        "Wrong Drug": 5,
+        "Wrong Drug /": 4,
+        "Wrong Duration": 1,
+        "Wrong Frequency": 3,
+        "Wrong Patient": 2,
+        "Wrong Rate Of Infusion": 1,
+        "Wrong Route": 2
+      },
+      "col_totals": {
+        "Prescribing": 62,
+        "Transcription & Administration": 14,
+        "Dispensing": 3
+      },
+      "grand_total": 79
+    },
+    "departments_all": {
+      "units": [
+        "4th W",
+        "Card1, P.CSU",
+        "CCU",
+        "CSU",
+        "ER",
+        "ER out",
+        "ER-ped",
+        "ICN",
+        "ICU",
+        "M/S 3rd ext",
+        "M/S 4th E",
+        "M/S 4th ext",
+        "M/S 4th N",
+        "M/S card2",
+        "M/S new card",
+        "New suite",
+        "new suite",
+        "PED",
+        "post csu",
+        "TCU"
+      ],
+      "counts": {
+        "4th W": 8,
+        "CCU": 1,
+        "CSU": 5,
+        "Card1, P.CSU": 2,
+        "ER": 5,
+        "ER out": 1,
+        "ER-ped": 2,
+        "ICN": 2,
+        "ICU": 23,
+        "M/S 3rd ext": 1,
+        "M/S 4th E": 7,
+        "M/S 4th N": 3,
+        "M/S 4th ext": 1,
+        "M/S card2": 1,
+        "M/S new card": 1,
+        "New suite": 5,
+        "PED": 3,
+        "TCU": 5,
+        "new suite": 2,
+        "post csu": 1
+      },
+      "total": 79
+    },
+    "heatmap_cycle_cause": {
+      "Administration": {
+        "Calculation Error": 0,
+        "Communication(Verbal/Written)": 0,
+        "Decimal Point": 1,
+        "Documentation Error": 0,
+        "Established Nursing Policy Deviation/ Orientee": 2,
+        "Established Pharmacy Policy Deviation": 0,
+        "Look-Alike Medication": 0,
+        "Medication Knowledge Deficiency": 1,
+        "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines": 0,
+        "Medication Knowledge Deficiency/Available Dosage Forms": 0,
+        "Medication Knowledge Deficiency/Indications For Medication Use": 0,
+        "Memory Lapse": 0,
+        "Non Adherence To Guidelines": 0,
+        "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted": 0,
+        "Poor Nurse'S/Physician Medication Knowledge": 0,
+        "System Error": 0,
+        "Work Flow Disruption": 0
+      },
+      "Dispensing": {
+        "Calculation Error": 0,
+        "Communication(Verbal/Written)": 0,
+        "Decimal Point": 0,
+        "Documentation Error": 0,
+        "Established Nursing Policy Deviation/ Orientee": 0,
+        "Established Pharmacy Policy Deviation": 1,
+        "Look-Alike Medication": 2,
+        "Medication Knowledge Deficiency": 0,
+        "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines": 0,
+        "Medication Knowledge Deficiency/Available Dosage Forms": 0,
+        "Medication Knowledge Deficiency/Indications For Medication Use": 0,
+        "Memory Lapse": 0,
+        "Non Adherence To Guidelines": 0,
+        "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted": 0,
+        "Poor Nurse'S/Physician Medication Knowledge": 0,
+        "System Error": 0,
+        "Work Flow Disruption": 0
+      },
+      "Prescribing": {
+        "Calculation Error": 3,
+        "Communication(Verbal/Written)": 1,
+        "Decimal Point": 1,
+        "Documentation Error": 1,
+        "Established Nursing Policy Deviation/ Orientee": 0,
+        "Established Pharmacy Policy Deviation": 0,
+        "Look-Alike Medication": 0,
+        "Medication Knowledge Deficiency": 0,
+        "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines": 1,
+        "Medication Knowledge Deficiency/Available Dosage Forms": 1,
+        "Medication Knowledge Deficiency/Indications For Medication Use": 1,
+        "Memory Lapse": 1,
+        "Non Adherence To Guidelines": 27,
+        "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted": 6,
+        "Poor Nurse'S/Physician Medication Knowledge": 7,
+        "System Error": 0,
+        "Work Flow Disruption": 12
+      },
+      "Transcription": {
+        "Calculation Error": 0,
+        "Communication(Verbal/Written)": 0,
+        "Decimal Point": 0,
+        "Documentation Error": 0,
+        "Established Nursing Policy Deviation/ Orientee": 0,
+        "Established Pharmacy Policy Deviation": 0,
+        "Look-Alike Medication": 0,
+        "Medication Knowledge Deficiency": 0,
+        "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines": 0,
+        "Medication Knowledge Deficiency/Available Dosage Forms": 0,
+        "Medication Knowledge Deficiency/Indications For Medication Use": 0,
+        "Memory Lapse": 1,
+        "Non Adherence To Guidelines": 5,
+        "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted": 0,
+        "Poor Nurse'S/Physician Medication Knowledge": 0,
+        "System Error": 4,
+        "Work Flow Disruption": 0
+      }
+    },
+    "heatmap_cause_cycle": {
+      "Calculation Error": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 3,
+        "Transcription": 0
+      },
+      "Communication(Verbal/Written)": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 1,
+        "Transcription": 0
+      },
+      "Decimal Point": {
+        "Administration": 1,
+        "Dispensing": 0,
+        "Prescribing": 1,
+        "Transcription": 0
+      },
+      "Documentation Error": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 1,
+        "Transcription": 0
+      },
+      "Established Nursing Policy Deviation/ Orientee": {
+        "Administration": 2,
+        "Dispensing": 0,
+        "Prescribing": 0,
+        "Transcription": 0
+      },
+      "Established Pharmacy Policy Deviation": {
+        "Administration": 0,
+        "Dispensing": 1,
+        "Prescribing": 0,
+        "Transcription": 0
+      },
+      "Look-Alike Medication": {
+        "Administration": 0,
+        "Dispensing": 2,
+        "Prescribing": 0,
+        "Transcription": 0
+      },
+      "Medication Knowledge Deficiency": {
+        "Administration": 1,
+        "Dispensing": 0,
+        "Prescribing": 0,
+        "Transcription": 0
+      },
+      "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 1,
+        "Transcription": 0
+      },
+      "Medication Knowledge Deficiency/Available Dosage Forms": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 1,
+        "Transcription": 0
+      },
+      "Medication Knowledge Deficiency/Indications For Medication Use": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 1,
+        "Transcription": 0
+      },
+      "Memory Lapse": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 1,
+        "Transcription": 1
+      },
+      "Non Adherence To Guidelines": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 27,
+        "Transcription": 5
+      },
+      "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 6,
+        "Transcription": 0
+      },
+      "Poor Nurse'S/Physician Medication Knowledge": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 7,
+        "Transcription": 0
+      },
+      "System Error": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 0,
+        "Transcription": 4
+      },
+      "Work Flow Disruption": {
+        "Administration": 0,
+        "Dispensing": 0,
+        "Prescribing": 12,
+        "Transcription": 0
+      }
+    },
+    "heatmap_cause_unit": {
+      "Calculation Error": {
+        "4Th W": 1,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 2,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Communication(Verbal/Written)": {
+        "4Th W": 1,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Decimal Point": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 1,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 1,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Documentation Error": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 1,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Established Nursing Policy Deviation/ Orientee": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 2,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Established Pharmacy Policy Deviation": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 1,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Look-Alike Medication": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 1,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 1,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Medication Knowledge Deficiency": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 1,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 1
+      },
+      "Medication Knowledge Deficiency/Available Dosage Forms": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 1,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Medication Knowledge Deficiency/Indications For Medication Use": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 1,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Memory Lapse": {
+        "4Th W": 1,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 1,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Non Adherence To Guidelines": {
+        "4Th W": 2,
+        "Card1, P.Csu": 2,
+        "Ccu": 1,
+        "Csu": 4,
+        "Er": 1,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 15,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 3,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 2,
+        "M/S Card2": 0,
+        "M/S New Card": 1,
+        "New Suite": 0,
+        "Ped": 1,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 6,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      },
+      "Poor Nurse'S/Physician Medication Knowledge": {
+        "4Th W": 0,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 2,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 1,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 1,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 0,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 3
+      },
+      "System Error": {
+        "4Th W": 1,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 0,
+        "Icu": 0,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 0,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 0,
+        "M/S New Card": 0,
+        "New Suite": 1,
+        "Ped": 0,
+        "Post Csu": 1,
+        "Tcu": 1
+      },
+      "Work Flow Disruption": {
+        "4Th W": 2,
+        "Card1, P.Csu": 0,
+        "Ccu": 0,
+        "Csu": 0,
+        "Er": 0,
+        "Er Out": 0,
+        "Er-Ped": 0,
+        "Icn": 1,
+        "Icu": 1,
+        "M/S 3Rd Ext": 0,
+        "M/S 4Th E": 2,
+        "M/S 4Th Ext": 0,
+        "M/S 4Th N": 0,
+        "M/S Card2": 1,
+        "M/S New Card": 0,
+        "New Suite": 5,
+        "Ped": 0,
+        "Post Csu": 0,
+        "Tcu": 0
+      }
+    },
+    "heatmap_cause_job": {
+      "Calculation Error": {
+        "Dr.": 3,
+        "Pharmasist": 0,
+        "Rn": 0
+      },
+      "Communication(Verbal/Written)": {
+        "Dr.": 1,
+        "Pharmasist": 0,
+        "Rn": 0
+      },
+      "Decimal Point": {
+        "Dr.": 1,
+        "Pharmasist": 0,
+        "Rn": 1
+      },
+      "Documentation Error": {
+        "Dr.": 1,
+        "Pharmasist": 0,
+        "Rn": 0
+      },
+      "Established Nursing Policy Deviation/ Orientee": {
+        "Dr.": 0,
+        "Pharmasist": 0,
+        "Rn": 2
+      },
+      "Established Pharmacy Policy Deviation": {
+        "Dr.": 0,
+        "Pharmasist": 1,
+        "Rn": 0
+      },
+      "Look-Alike Medication": {
+        "Dr.": 0,
+        "Pharmasist": 2,
+        "Rn": 0
+      },
+      "Medication Knowledge Deficiency": {
+        "Dr.": 0,
+        "Pharmasist": 0,
+        "Rn": 1
+      },
+      "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines": {
+        "Dr.": 1,
+        "Pharmasist": 0,
+        "Rn": 0
+      },
+      "Medication Knowledge Deficiency/Available Dosage Forms": {
+        "Dr.": 1,
+        "Pharmasist": 0,
+        "Rn": 0
+      },
+      "Medication Knowledge Deficiency/Indications For Medication Use": {
+        "Dr.": 1,
+        "Pharmasist": 0,
+        "Rn": 0
+      },
+      "Memory Lapse": {
+        "Dr.": 1,
+        "Pharmasist": 0,
+        "Rn": 1
+      },
+      "Non Adherence To Guidelines": {
+        "Dr.": 27,
+        "Pharmasist": 0,
+        "Rn": 5
+      },
+      "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted": {
+        "Dr.": 6,
+        "Pharmasist": 0,
+        "Rn": 0
+      },
+      "Poor Nurse'S/Physician Medication Knowledge": {
+        "Dr.": 7,
+        "Pharmasist": 0,
+        "Rn": 0
+      },
+      "System Error": {
+        "Dr.": 0,
+        "Pharmasist": 0,
+        "Rn": 4
+      },
+      "Work Flow Disruption": {
+        "Dr.": 12,
+        "Pharmasist": 0,
+        "Rn": 0
+      }
+    },
+    "heatmap_cause_shift": {
+      "Calculation Error": {
+        "Day": 3,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Communication(Verbal/Written)": {
+        "Day": 1,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Decimal Point": {
+        "Day": 1,
+        "Evening": 0,
+        "Night": 1
+      },
+      "Documentation Error": {
+        "Day": 1,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Established Nursing Policy Deviation/ Orientee": {
+        "Day": 0,
+        "Evening": 2,
+        "Night": 0
+      },
+      "Established Pharmacy Policy Deviation": {
+        "Day": 1,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Look-Alike Medication": {
+        "Day": 0,
+        "Evening": 2,
+        "Night": 0
+      },
+      "Medication Knowledge Deficiency": {
+        "Day": 0,
+        "Evening": 0,
+        "Night": 1
+      },
+      "Medication Knowledge Deficiency/Appropriate Dosing /Dosing Guidelines": {
+        "Day": 1,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Medication Knowledge Deficiency/Available Dosage Forms": {
+        "Day": 1,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Medication Knowledge Deficiency/Indications For Medication Use": {
+        "Day": 1,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Memory Lapse": {
+        "Day": 2,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Non Adherence To Guidelines": {
+        "Day": 32,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Patient Knowledge Deficiency/Lab Values /Clinical Information Not Available/Not Noted": {
+        "Day": 6,
+        "Evening": 0,
+        "Night": 0
+      },
+      "Poor Nurse'S/Physician Medication Knowledge": {
+        "Day": 7,
+        "Evening": 0,
+        "Night": 0
+      },
+      "System Error": {
+        "Day": 3,
+        "Evening": 1,
+        "Night": 0
+      },
+      "Work Flow Disruption": {
+        "Day": 12,
+        "Evening": 0,
+        "Night": 0
+      }
+    }
+  },
+  "records": []
+}

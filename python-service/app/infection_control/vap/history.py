@@ -27,8 +27,24 @@ def get_vap_targets() -> dict:
     return load_targets().get("vap", FLOOR_TARGETS)
 
 
-HISTORY_PATH = Path("storage/data/VAP_history.json")
-CURRENT_PATH = Path("storage/data/VAP_current.json")
+HISTORY_PATH      = Path("storage/data/VAP_history.json")
+CASES_DIR         = Path("storage/data/VAP/cases")
+_LEGACY_CURRENT   = Path("storage/data/VAP_current.json")
+MAX_CASE_QUARTERS = 8
+
+# Arabic quarter name → Q number used in filenames
+_AR_TO_Q = {
+    "الفصل الأول":  1, "الفصل الاول": 1,
+    "الفصل الثاني": 2,
+    "الفصل الثالث": 3,
+    "الفصل الرابع": 4,
+}
+
+
+def _cases_file(quarter: str, year) -> Path:
+    """Return the per-quarter cases file path, e.g. storage/data/VAP/cases/2025_Q3.json."""
+    n = _AR_TO_Q.get(str(quarter).strip(), 0)
+    return CASES_DIR / f"{year}_Q{n}.json"
 
 
 def load_history() -> list:
@@ -40,18 +56,60 @@ def load_history() -> list:
 
 
 def load_current() -> dict:
-    """Return the latest quarter's raw cases (stored separately from history)."""
-    if not CURRENT_PATH.exists():
-        return {}
-    with open(CURRENT_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+    """Return the latest quarter's raw cases (newest per-quarter file, legacy fallback)."""
+    if CASES_DIR.exists():
+        files = sorted(CASES_DIR.glob("*.json"))
+        if files:
+            with open(files[-1], "r", encoding="utf-8") as f:
+                return json.load(f)
+    if _LEGACY_CURRENT.exists():
+        with open(_LEGACY_CURRENT, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
 
 
 def save_current(data: dict) -> None:
-    """Overwrite the current-quarter file with raw cases only."""
-    CURRENT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(CURRENT_PATH, "w", encoding="utf-8") as f:
+    """Save raw cases to a per-quarter file and keep at most MAX_CASE_QUARTERS files."""
+    path = _cases_file(data.get("quarter", ""), data.get("year", ""))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    # Trim oldest files beyond the limit
+    files = sorted(CASES_DIR.glob("*.json"))
+    for old in files[:-MAX_CASE_QUARTERS]:
+        old.unlink(missing_ok=True)
+
+
+def load_cases_for_quarter(quarter: str, year) -> dict:
+    """Load individual cases for a specific quarter. Returns empty cases list if not found."""
+    path = _cases_file(quarter, str(year))
+    if path.exists():
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {"year": str(year), "quarter": quarter, "cases": []}
+
+
+def list_case_quarters() -> list:
+    """Return [{quarter, year}] for all stored case files, sorted oldest → newest."""
+    result = []
+    if CASES_DIR.exists():
+        for f in sorted(CASES_DIR.glob("*.json")):
+            try:
+                with open(f, "r", encoding="utf-8") as fh:
+                    d = json.load(fh)
+                if d.get("quarter") and d.get("year"):
+                    result.append({"quarter": d["quarter"], "year": d["year"]})
+            except Exception:
+                pass
+    if not result and _LEGACY_CURRENT.exists():
+        try:
+            with open(_LEGACY_CURRENT, "r", encoding="utf-8") as f:
+                d = json.load(f)
+            if d.get("quarter") and d.get("year"):
+                return [{"quarter": d["quarter"], "year": d["year"]}]
+        except Exception:
+            pass
+    return result
 
 
 # Map English/numeric quarter input → Arabic display name stored in JSON

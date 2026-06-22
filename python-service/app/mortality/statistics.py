@@ -50,6 +50,14 @@ class MortalityStatistics:
         if total_patients and total_patients > 0:
             stats['mortality_metrics'] = self._mortality_rate(kpi_deaths, total_patients)
             stats['kpi_deaths'] = kpi_deaths
+
+        # Average length of stay (KPI=YES records)
+        if 'length_of_stay' in kpi_df.columns:
+            los_vals = pd.to_numeric(kpi_df['length_of_stay'], errors='coerce').dropna()
+            stats['avg_los'] = round(float(los_vals.mean()), 1) if len(los_vals) > 0 else 0
+
+        # KPI=NO count (deaths excluded from KPI — died within 24h)
+        stats['kpi_no_count'] = len(df) - kpi_deaths
         
         # WHO categories from KPI-filtered data
         if 'who_category_1' in kpi_df.columns:

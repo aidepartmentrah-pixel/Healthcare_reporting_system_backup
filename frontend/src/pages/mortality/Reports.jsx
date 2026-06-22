@@ -10,7 +10,7 @@ const QUARTER_ORDER = {
 };
 
 
-function Reports({ data }) {
+function Reports({ data, selectedQ }) {
   const { t } = useTranslation();
   const [reportType, setReportType]   = useState('summary');
   const [generating, setGenerating]   = useState(false);
@@ -23,22 +23,29 @@ function Reports({ data }) {
     axios.get(`${API_URL}/history`)
       .then(res => {
         const entries = Array.isArray(res.data) ? res.data : [];
-        // Sort newest first for the dropdown
         const sorted = [...entries].sort((a, b) => {
           const ya = parseInt(a.year) || 0, yb = parseInt(b.year) || 0;
           if (ya !== yb) return yb - ya;
           return (QUARTER_ORDER[b.quarter] || 0) - (QUARTER_ORDER[a.quarter] || 0);
         });
         setHistory(sorted);
-        // Default to the last uploaded quarter (from data prop), not simply index 0
-        const currentIdx = data?.quarter
-          ? sorted.findIndex(e => e.quarter === data.quarter && String(e.year) === String(data.year))
+        // Prefer the quarter selected from the top-of-page selector, then the latest data prop
+        const preferred = selectedQ || (data?.quarter ? { quarter: data.quarter, year: String(data.year) } : null);
+        const idx = preferred
+          ? sorted.findIndex(e => e.quarter === preferred.quarter && String(e.year) === String(preferred.year))
           : -1;
-        setSelectedIndex(currentIdx >= 0 ? currentIdx : 0);
+        setSelectedIndex(idx >= 0 ? idx : 0);
       })
       .catch(err => console.error('Failed to load mortality history:', err))
       .finally(() => setLoading(false));
   }, []);
+
+  // Sync when selectedQ changes (user selects a different quarter while on this page)
+  useEffect(() => {
+    if (!selectedQ || !history.length) return;
+    const idx = history.findIndex(e => e.quarter === selectedQ.quarter && String(e.year) === String(selectedQ.year));
+    if (idx >= 0) setSelectedIndex(idx);
+  }, [selectedQ, history]);
 
   const entry = history[selectedIndex] || null;
 

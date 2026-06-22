@@ -522,19 +522,17 @@
     "who_categories": {
       "cardiovascular disease": 34,
       "genitourinarydiseases": 11,
+      "injuries": 11,
       "malignant neoplasms": 9,
       "congenital  anomalies": 7,
       "infectious and parasitic diseases": 6,
       "defined disease": 6,
       "digestive diseases": 6,
       "respiratory diseases": 6,
-      "unintentional injuries": 6,
-      "intracranial injury": 4,
       "neuropsychiatric conditions": 3,
       "Infection following a procedure, not elsewhere classified": 3,
       "perinatal conditions": 2,
-      "diabetes mellitus and endocrine disorders": 1,
-      "intentional injuries": 1
+      "diabetes mellitus and endocrine disorders": 1
     }
   },
   {
@@ -542,7 +540,7 @@
     "year": "2025",
     "rate": 1.36,
     "deaths": 86,
-    "total_patients": 6308,
+    "total_patients": 6317,
     "age_groups": [
       7,
       1,

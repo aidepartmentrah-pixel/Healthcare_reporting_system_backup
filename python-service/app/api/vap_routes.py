@@ -15,7 +15,10 @@ from loguru import logger
 
 from app.infection_control.vap.processor import process_vap_sheet
 import json
-from app.infection_control.vap.history import VAPHistory, load_history, load_current, FLOOR_TARGETS, STANDARD_FLOORS
+from app.infection_control.vap.history import (
+    VAPHistory, load_history, load_current, FLOOR_TARGETS, STANDARD_FLOORS,
+    load_cases_for_quarter, list_case_quarters,
+)
 from app.infection_control.ic_statistics import InfectionControlStatistics, get_floors_from_excel
 
 router = APIRouter(prefix="/api/vap", tags=["VAP"])
@@ -66,11 +69,20 @@ def _normalize_cell_semester(value) -> int | None:
 
 
 def _filter_cases_by_semester(cases: list, quarter) -> list:
-    """Filter case dicts by semester field. quarter can be str (Arabic) or int (1-4)."""
+    """Filter case dicts by semester field. quarter can be int, numeric str, or Arabic str."""
     if isinstance(quarter, int):
         target = quarter if 1 <= quarter <= 4 else None
     else:
-        target = _QUARTER_STR_TO_NUM.get(str(quarter).strip())
+        q = str(quarter).strip()
+        target = _QUARTER_STR_TO_NUM.get(q)
+        if target is None:
+            # Handle numeric strings sent by the frontend ("1","2","3","4")
+            try:
+                n = int(float(q))
+                if 1 <= n <= 4:
+                    target = n
+            except (ValueError, TypeError):
+                pass
 
     if target is None:
         logger.warning(f"⚠️  Unrecognized quarter '{quarter}', skipping semester filter")
@@ -318,6 +330,18 @@ async def get_current():
     return JSONResponse(load_current())
 
 
+@router.get("/available-case-quarters")
+async def get_available_case_quarters():
+    """Return list of [{quarter, year}] for which case files exist."""
+    return JSONResponse(list_case_quarters())
+
+
+@router.get("/cases")
+async def get_cases_for_quarter(quarter: str, year: str):
+    """Return raw case data for a specific quarter."""
+    return JSONResponse(load_cases_for_quarter(quarter, year))
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # GET /api/vap/history/latest
 # ══════════════════════════════════════════════════════════════════════════════
@@ -414,20 +438,18 @@ async def delete_quarter(quarter: str, year: int):
 # POST /api/vap/generate-report
 # ══════════════════════════════════════════════════════════════════════════════
 @router.post("/generate-report")
-def generate_vap_report():
-    """
-    Generate a DOCX VAP report from the full history file.
-    All statistics (cases, germs, rates) are already stored in the history JSON.
-    """
+def generate_vap_report(body: dict = {}):
+    """Generate a DOCX VAP report. Optional body: {quarter, year} to use a specific quarter's cases."""
     history = load_history()
     if not history:
         raise HTTPException(status_code=404, detail="No VAP data available")
     try:
         from app.infection_control.vap.docx_generator import VAPDocxGenerator
         from app.infection_control.vap.history import get_vap_targets
-        current = load_current()
-        gen     = VAPDocxGenerator()
-        result  = gen.generate_report(history=history, targets=get_vap_targets(), current=current)
+        q, y = body.get("quarter"), body.get("year")
+        current = load_cases_for_quarter(q, y) if (q and y) else load_current()
+        gen    = VAPDocxGenerator()
+        result = gen.generate_report(history=history, targets=get_vap_targets(), current=current)
         return {"success": True, "filePath": result["filePath"], "fileName": result["fileName"]}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))

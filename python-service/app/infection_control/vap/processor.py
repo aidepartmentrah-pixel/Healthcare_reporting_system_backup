@@ -29,15 +29,20 @@ COL_MAP = {
     "age/year":                          "age",
     "diagnosis":                         "diagnosis",
     "date of admission":                 "date_of_admission",
+    "admission date":                    "date_of_admission",
     "date of intubation":                "date_of_intubation",
     "date of /intubation /insertion":    "date_of_intubation",
     "date of intubation/insertion":      "date_of_intubation",
     "date of intubation / insertion":    "date_of_intubation",
+    "intubation date/ insertion":        "date_of_intubation",
+    "intubation date/insertion":         "date_of_intubation",
     "تاريخ التنبيب":                     "date_of_intubation",
     "date of infection":                 "date_of_infection",
+    "infection date":                    "date_of_infection",
     "germs":                             "germs",
     "gender":                            "gender",
     "diabetic":                          "diabetic",
+    "diabetes":                          "diabetic",
     "hypertension":                      "hypertension",
     "dyslipidemia":                      "dyslipidemia",
     # FIX 2: Excel headers have a leading space — strip handles it in _normalize_col
@@ -45,14 +50,33 @@ COL_MAP = {
     "kidney disease":                    "kidney_disease",
     "copd":                              "copd",
     "smoker":                            "smoker",
+    "smoking":                           "smoker",
     "obesity":                           "obesity",
     "cardiac congenital malformation":   "cardiac_congenital_malformation",
+    "&cardiac congenital malformation":  "cardiac_congenital_malformation",
     "advanced age":                      "advanced_age",
     "length of stay":                    "length_of_stay",
     "duration of ventilation":           "duration_of_ventilation",
     "cancer":                            "cancer",
-    "compromised immune system":         "compromised_immune_system",
-    "respiratory pb":                    "respiratory_pb",
+    "compromised immune system":          "compromised_immune_system",
+    "respiratory pb":                     "respiratory_pb",
+    "readmission date":                    "readmission_date",
+    "discharge date":                      "discharge_date",
+    "inserted by":                         "inserted_by",
+    "location of insertion/intubation":    "location_of_insertion",
+    "/removal catheter tube date":         "removal_date",
+    "dwell time":                          "dwell_time",
+    "prematurity":                         "prematurity",
+    "neonates":                            "neonates",
+    "infant":                              "infant",
+    "total parenteral nutrition (tpn)":    "total_parenteral_nutrition",
+    "consciousness":                       "consciousness",
+    "head trauma":                         "head_trauma",
+    "burns":                               "burns",
+    "malnutrition":                        "malnutrition",
+    "prolonged antibiotic exposure":       "prolonged_antibiotic_exposure",
+    "reintubat/ion recatheterization":     "reintubation_recatheterization",
+    "tracheostomy":                        "tracheostomy",
 }
 
 RISK_FACTOR_COLS = [
@@ -60,6 +84,10 @@ RISK_FACTOR_COLS = [
     "kidney_disease", "copd", "smoker", "obesity",
     "cardiac_congenital_malformation", "advanced_age",
     "cancer", "compromised_immune_system", "respiratory_pb",
+    "prematurity", "neonates", "infant", "total_parenteral_nutrition",
+    "consciousness", "head_trauma", "burns", "malnutrition",
+    "prolonged_antibiotic_exposure", "reintubation_recatheterization",
+    "tracheostomy",
 ]
 
 RISK_FACTOR_LABELS = {
@@ -73,9 +101,20 @@ RISK_FACTOR_LABELS = {
     "obesity":                         "Obesity / السمنة",
     "cardiac_congenital_malformation": "Cardiac Congenital Malformation / تشوه قلبي خلقي",
     "advanced_age":                    "Advanced Age / تقدم العمر",
-    "cancer":                          "Cancer / السرطان",
-    "compromised_immune_system":       "Compromised Immune System / ضعف المناعة",
-    "respiratory_pb":                  "Respiratory Problem / مشكلة تنفسية",
+    "cancer":                           "Cancer / السرطان",
+    "compromised_immune_system":        "Compromised Immune System / ضعف المناعة",
+    "respiratory_pb":                   "Respiratory Problem / مشكلة تنفسية",
+    "prematurity":                      "Prematurity / الخداج",
+    "neonates":                         "Neonates / حديثو الولادة",
+    "infant":                           "Infant / رضيع",
+    "total_parenteral_nutrition":       "Total Parenteral Nutrition (TPN) / التغذية الوريدية الكاملة",
+    "consciousness":                    "Consciousness / الوعي",
+    "head_trauma":                      "Head Trauma / صدمة الرأس",
+    "burns":                            "Burns / الحروق",
+    "malnutrition":                     "Malnutrition / سوء التغذية",
+    "prolonged_antibiotic_exposure":    "Prolonged Antibiotic Exposure / التعرض المطول للمضادات الحيوية",
+    "reintubation_recatheterization":   "Reintubation / Recatheterization / إعادة التنبيب / إعادة القسطرة",
+    "tracheostomy":                     "Tracheostomy / بضع الرغامى",
 }
 
 
@@ -284,9 +323,12 @@ def process_vap_sheet(filepath: str,
         raw_intubation = get(r, "date_of_intubation")
         raw_infection  = get(r, "date_of_infection")
 
-        admission  = _parse_date(raw_admission)
-        intubation = _parse_date(raw_intubation)
-        infection  = _parse_date(raw_infection)
+        admission   = _parse_date(raw_admission)
+        intubation  = _parse_date(raw_intubation)
+        infection   = _parse_date(raw_infection)
+        readmission = _parse_date(get(r, "readmission_date"))
+        discharge   = _parse_date(get(r, "discharge_date"))
+        removal     = _parse_date(get(r, "removal_date"))
 
         # length_of_stay and duration_of_ventilation may be Yes/No flags in this Excel
         # _to_float returns None for 'Yes'/'No' strings which is correct behaviour
@@ -299,20 +341,27 @@ def process_vap_sheet(filepath: str,
             "nb_of_cases":                  get(r, "nb_of_cases"),
             "year":                         get(r, "year"),
             "semester":                     get(r, "semester"),
+            "type_of_infection":            get(r, "type_of_infection"),
             "floor":                        get(r, "floor"),
             "age":                          age_val,
             "age_display":                  _age_display(age_val),
             "gender":                       get(r, "gender"),
             "diagnosis":                    get(r, "diagnosis"),
             "germs":                        get(r, "germs"),
-            "date_of_admission":            str(admission)  if admission  else None,
-            "date_of_intubation":           str(intubation) if intubation else None,
-            "date_of_infection":            str(infection)  if infection  else None,
+            "date_of_admission":            str(admission)   if admission   else None,
+            "readmission_date":             str(readmission) if readmission else None,
+            "discharge_date":               str(discharge)   if discharge   else None,
+            "date_of_intubation":           str(intubation)  if intubation  else None,
+            "removal_date":                 str(removal)     if removal     else None,
+            "date_of_infection":            str(infection)   if infection   else None,
             "infection_month":              infection.strftime("%Y-%m") if infection else None,
             "intubation_to_infection_days": _days_between(intubation, infection),
             "admission_to_infection_days":  _days_between(admission, infection),
             "length_of_stay":               _to_float(los_raw),
             "duration_of_ventilation":      _to_float(dov_raw),
+            "dwell_time":                   _to_float(get(r, "dwell_time")),
+            "inserted_by":                  get(r, "inserted_by"),
+            "location_of_insertion":        get(r, "location_of_insertion"),
             **{col: _yes_no(get(r, col)) for col in RISK_FACTOR_COLS},
         }
         cases.append(case)

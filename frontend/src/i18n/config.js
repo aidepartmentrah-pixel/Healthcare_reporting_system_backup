@@ -46,6 +46,21 @@ const resources = {
 
       "homeNote": "يمكنك التبديل بين الأنظمة في أي وقت من خلال شعار التطبيق",
 
+      // ── Auth ─────────────────────────────────────────────────────────────
+      "navLogin": "تسجيل الدخول",
+      "navLogout": "تسجيل الخروج",
+      "navSettings": "الإعدادات",
+      "loginTitle": "نظام التقارير الصحية",
+      "loginSubtitle": "سجّل دخولك للوصول الكامل",
+      "loginUsername": "اسم المستخدم",
+      "loginUsernamePlaceholder": "أدخل اسم المستخدم",
+      "loginPassword": "كلمة المرور",
+      "loginPasswordPlaceholder": "أدخل كلمة المرور",
+      "loginButton": "تسجيل الدخول",
+      "loginLoading": "جارٍ التحقق...",
+      "loginError": "اسم المستخدم أو كلمة المرور غير صحيحة",
+      "loginGuestNote": "بدون تسجيل دخول يمكنك عرض لوحات البيانات فقط",
+
       // ── App footer ────────────────────────────────────────────────────────
       "footerText": "© 2026 نظام التقارير الصحية الذكي. جميع الحقوق محفوظة.",
 
@@ -270,6 +285,8 @@ const resources = {
       "vapQuarterlyRateVsTarget": "معدل VAP الفصلي مقابل الهدف",
       "vapActualRate": "المعدل الفعلي",
       "floorRateComparison": "مقارنة معدلات الأقسام",
+      "noTargetDefined": "لا يوجد هدف محدد",
+      "totalCasesRow": "إجمالي الحالات",
       "germDistributionHeatmap": "خريطة توزيع الجراثيم",
       "noVapData": "لا توجد بيانات VAP",
       "noVapDataDesc": "قم بتحميل تقرير VAP للبدء.",
@@ -404,6 +421,21 @@ const resources = {
       "ctaArrowEn": "→",
 
       "homeNote": "You can switch between systems at any time via the app logo",
+
+      // ── Auth ─────────────────────────────────────────────────────────────
+      "navLogin": "Login",
+      "navLogout": "Logout",
+      "navSettings": "Settings",
+      "loginTitle": "Healthcare Reporting System",
+      "loginSubtitle": "Sign in for full access",
+      "loginUsername": "Username",
+      "loginUsernamePlaceholder": "Enter username",
+      "loginPassword": "Password",
+      "loginPasswordPlaceholder": "Enter password",
+      "loginButton": "Sign In",
+      "loginLoading": "Verifying...",
+      "loginError": "Incorrect username or password",
+      "loginGuestNote": "Without signing in you can only view dashboards",
 
       // ── App footer ────────────────────────────────────────────────────────
       "footerText": "© 2026 Smart Healthcare Reporting System. All rights reserved.",
@@ -627,6 +659,8 @@ const resources = {
       "vapAboveTarget": "▲ Above Target",
       "vapBelowTarget": "▼ Below Target",
       "vapQuarterlyRateVsTarget": "Quarterly VAP Rate vs Target",
+      "noTargetDefined": "No target defined",
+      "totalCasesRow": "Total Cases",
       "vapActualRate": "Actual Rate",
       "floorRateComparison": "Floor Rate Comparison",
       "germDistributionHeatmap": "Germ Distribution Heatmap",

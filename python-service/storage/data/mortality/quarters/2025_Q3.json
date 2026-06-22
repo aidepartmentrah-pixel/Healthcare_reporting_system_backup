@@ -1,0 +1,684 @@
+{
+  "quarter": "الفصل الثالث",
+  "year": "2025",
+  "statistics": {
+    "total_deaths": 111,
+    "demographics": {
+      "age": {
+        "mean": 67.5,
+        "median": 73.0,
+        "min": 0,
+        "max": 101,
+        "std": 22.1
+      },
+      "gender": {
+        "male": 59,
+        "female": 46,
+        "male_percentage": 56.2,
+        "female_percentage": 43.8
+      },
+      "age_groups": [
+        {
+          "group": "من 71 الى 80 سنة",
+          "count": 32,
+          "percentage": 30.5
+        },
+        {
+          "group": "اكثر من 81 سنة",
+          "count": 27,
+          "percentage": 25.7
+        },
+        {
+          "group": "من 61 الى 70 سنة",
+          "count": 20,
+          "percentage": 19.0
+        },
+        {
+          "group": "من 51 الى 60 سنة",
+          "count": 9,
+          "percentage": 8.6
+        },
+        {
+          "group": "من 31 الى 50 سنة",
+          "count": 7,
+          "percentage": 6.7
+        },
+        {
+          "group": "من 5 الى 15 سنة",
+          "count": 4,
+          "percentage": 3.8
+        },
+        {
+          "group": "اقل من 5 سنوات",
+          "count": 3,
+          "percentage": 2.9
+        },
+        {
+          "group": "Unknown",
+          "count": 2,
+          "percentage": 1.9
+        },
+        {
+          "group": "من 16 الى 30 سنة",
+          "count": 1,
+          "percentage": 1.0
+        }
+      ],
+      "age_categories": [
+        {
+          "group": "اقل من 5 سنوات",
+          "count": 9,
+          "percentage": 8.6
+        },
+        {
+          "group": "من 5 الى 15 سنة",
+          "count": 0,
+          "percentage": 0.0
+        },
+        {
+          "group": "من 16 الى 30 سنة",
+          "count": 1,
+          "percentage": 1.0
+        },
+        {
+          "group": "من 31 الى 50 سنة",
+          "count": 7,
+          "percentage": 6.7
+        },
+        {
+          "group": "من 51 الى 60 سنة",
+          "count": 9,
+          "percentage": 8.6
+        },
+        {
+          "group": "من 61 الى 70 سنة",
+          "count": 19,
+          "percentage": 18.1
+        },
+        {
+          "group": "من 71 الى 80 سنة",
+          "count": 31,
+          "percentage": 29.5
+        },
+        {
+          "group": "اكثر من 81 سنة",
+          "count": 29,
+          "percentage": 27.6
+        }
+      ]
+    },
+    "departments": [
+      {
+        "name": "ICU",
+        "count": 42,
+        "percentage": 40.0
+      },
+      {
+        "name": "CCU",
+        "count": 18,
+        "percentage": 17.1
+      },
+      {
+        "name": "CSU",
+        "count": 17,
+        "percentage": 16.2
+      },
+      {
+        "name": "ITCU",
+        "count": 12,
+        "percentage": 11.4
+      },
+      {
+        "name": "ICN",
+        "count": 8,
+        "percentage": 7.6
+      },
+      {
+        "name": "ER",
+        "count": 4,
+        "percentage": 3.8
+      },
+      {
+        "name": "New cardiac",
+        "count": 2,
+        "percentage": 1.9
+      },
+      {
+        "name": "North 3",
+        "count": 1,
+        "percentage": 1.0
+      },
+      {
+        "name": "C2",
+        "count": 1,
+        "percentage": 1.0
+      }
+    ],
+    "specialties": [
+      {
+        "name": "امراض صدرية وعناية فائقة",
+        "count": 34,
+        "percentage": 32.4
+      },
+      {
+        "name": "امراض القلب والشرايين",
+        "count": 20,
+        "percentage": 19.0
+      },
+      {
+        "name": "جراحة قلب وشرايين",
+        "count": 14,
+        "percentage": 13.3
+      },
+      {
+        "name": "طب أطفال",
+        "count": 9,
+        "percentage": 8.6
+      },
+      {
+        "name": "امراض جرثومية",
+        "count": 7,
+        "percentage": 6.7
+      },
+      {
+        "name": "جراحة القلب والصدر والشرايين",
+        "count": 4,
+        "percentage": 3.8
+      },
+      {
+        "name": "امراض الكلى و الضغط",
+        "count": 4,
+        "percentage": 3.8
+      },
+      {
+        "name": "امراض صدرية",
+        "count": 3,
+        "percentage": 2.9
+      },
+      {
+        "name": "جراحة عامة",
+        "count": 3,
+        "percentage": 2.9
+      },
+      {
+        "name": "جراحة عظام",
+        "count": 2,
+        "percentage": 1.9
+      },
+      {
+        "name": "جهاز هضمي",
+        "count": 2,
+        "percentage": 1.9
+      },
+      {
+        "name": "علم المناعة السريري",
+        "count": 1,
+        "percentage": 1.0
+      },
+      {
+        "name": "جراحة شرايين",
+        "count": 1,
+        "percentage": 1.0
+      },
+      {
+        "name": "جراحة أعصاب",
+        "count": 1,
+        "percentage": 1.0
+      }
+    ],
+    "temporal": {
+      "monthly": {
+        "7": 35,
+        "8": 36,
+        "9": 40
+      },
+      "monthly_array": [
+        {
+          "month": 7,
+          "count": 35
+        },
+        {
+          "month": 8,
+          "count": 36
+        },
+        {
+          "month": 9,
+          "count": 40
+        }
+      ]
+    },
+    "clinical": {
+      "top_causes": [
+        {
+          "name": "Cardiac arrest",
+          "count": 55
+        },
+        {
+          "name": "Septick Shock",
+          "count": 35
+        },
+        {
+          "name": "Septic shock",
+          "count": 14
+        },
+        {
+          "name": "Septoc shock",
+          "count": 1
+        }
+      ],
+      "admission_sources": [
+        {
+          "name": "ER",
+          "count": 71,
+          "percentage": 67.6
+        },
+        {
+          "name": "OPD",
+          "count": 19,
+          "percentage": 18.1
+        },
+        {
+          "name": "Post delivery",
+          "count": 6,
+          "percentage": 5.7
+        },
+        {
+          "name": "T.F.A.H",
+          "count": 2,
+          "percentage": 1.9
+        },
+        {
+          "name": "T.F.A.H  ( Hospital Riyak )",
+          "count": 1,
+          "percentage": 1.0
+        },
+        {
+          "name": "T.F.A.H ( TEBNIN Governmental Hospital )",
+          "count": 1,
+          "percentage": 1.0
+        },
+        {
+          "name": "T.F.A.H ( Jabal Amel Hospital )",
+          "count": 1,
+          "percentage": 1.0
+        },
+        {
+          "name": "T.F.A.H ( AlZahraa Hospital )",
+          "count": 1,
+          "percentage": 1.0
+        },
+        {
+          "name": "ER ( Transfer from dialysis depardement )",
+          "count": 1,
+          "percentage": 1.0
+        },
+        {
+          "name": "ER // T.F.A.H ( Daralamal Hospital )",
+          "count": 1,
+          "percentage": 1.0
+        },
+        {
+          "name": "T.F.A.H ( jabal Amel Hospital )",
+          "count": 1,
+          "percentage": 1.0
+        }
+      ],
+      "admission_source_categories": [
+        {
+          "name": "ER",
+          "count": 72,
+          "percentage": 68.6
+        },
+        {
+          "name": "OPD",
+          "count": 19,
+          "percentage": 18.1
+        },
+        {
+          "name": "TRANSFER FROM ANOTHER HOSPITAL",
+          "count": 8,
+          "percentage": 7.6
+        },
+        {
+          "name": "Post delivery",
+          "count": 6,
+          "percentage": 5.7
+        }
+      ]
+    },
+    "mortality_metrics": {
+      "deaths": 105,
+      "total_patients": 5858,
+      "rate": 1.79,
+      "formatted": "1.79%",
+      "survival_rate": 98.21,
+      "survival_formatted": "98.21%"
+    },
+    "kpi_deaths": 105,
+    "avg_los": 24.5,
+    "kpi_no_count": 6,
+    "who_categories_kpi": {
+      "cardiovascular disease": 34,
+      "genitourinarydiseases": 11,
+      "injuries": 11,
+      "malignant neoplasms": 9,
+      "congenital  anomalies": 7,
+      "infectious and parasitic diseases": 6,
+      "defined disease": 6,
+      "digestive diseases": 6,
+      "respiratory diseases": 6,
+      "neuropsychiatric conditions": 3,
+      "Infection following a procedure, not elsewhere classified": 3,
+      "perinatal conditions": 2,
+      "diabetes mellitus and endocrine disorders": 1
+    },
+    "buildings": {
+      "bci": {
+        "building": "BCI",
+        "deaths": 38,
+        "percentage": 36.2
+      },
+      "rah": {
+        "building": "RAH",
+        "deaths": 67,
+        "percentage": 63.8
+      },
+      "total": {
+        "deaths": 105,
+        "admissions": 5858
+      }
+    }
+  },
+  "who_categories": [
+    {
+      "category": "cardiovascular disease",
+      "count": 34
+    },
+    {
+      "category": "genitourinarydiseases",
+      "count": 11
+    },
+    {
+      "category": "injuries",
+      "count": 11
+    },
+    {
+      "category": "malignant neoplasms",
+      "count": 9
+    },
+    {
+      "category": "congenital  anomalies",
+      "count": 7
+    },
+    {
+      "category": "defined disease",
+      "count": 6
+    },
+    {
+      "category": "digestive diseases",
+      "count": 6
+    },
+    {
+      "category": "infectious and parasitic diseases",
+      "count": 6
+    },
+    {
+      "category": "respiratory diseases",
+      "count": 6
+    },
+    {
+      "category": "Infection following a procedure, not elsewhere classified",
+      "count": 3
+    },
+    {
+      "category": "neuropsychiatric conditions",
+      "count": 3
+    },
+    {
+      "category": "perinatal conditions",
+      "count": 2
+    },
+    {
+      "category": "diabetes mellitus and endocrine disorders",
+      "count": 1
+    },
+    {
+      "category": "Grand Total",
+      "count": 105
+    }
+  ],
+  "records": [
+    {
+      "year": 2025,
+      "month": 9,
+      "age": 86.0,
+      "birth_date": "1/1/1942",
+      "age_category": "81 سنة و ما فوق",
+      "admission_date": "9/11/2025",
+      "admission_source": "ER",
+      "admission_source_category": "ER",
+      "admission_time": "10.03 P.M",
+      "direct_cause_of_death": "cardiac arrest",
+      "direct_cause_code": "I46",
+      "death_date": "2025-09-12 00:00:00",
+      "death_time": "2.50 P.M",
+      "underlying_cause_of_death": "Heart failure, unspecified",
+      "underlying_cause_code": "I50.9",
+      "diagnosis_classification": "diseases of circulatory system",
+      "who_category_1": "cardiovascular disease",
+      "who_category_2": "ill defined circulatory diseases",
+      "room_number": "617",
+      "nursing_department": "ER",
+      "building": "rah",
+      "specialty": "امراض صدرية وعناية فائقة",
+      "treating_doctor": "د. عبد الله حسين الحاج حسن",
+      "الطبيب مؤكد الوفاة": "د. عبد الله الحاج حسن",
+      "gender": "ذكر",
+      "إسم الأم": "فاطمة طحيني",
+      "record_number": "غير متوفر",
+      "insurance": "وزارة الصحة",
+      "العنوان": "الشياح",
+      "length_of_stay": 0.6666666666666666,
+      "include_kpi": "NO",
+      "": null,
+      "length_of_stay_original": "16 ساعة",
+      "kpi_expected": "NO",
+      "age_group": "اكثر من 81 سنة"
+    },
+    {
+      "year": 2025,
+      "month": 7,
+      "age": 0.0,
+      "birth_date": "2025-06-30T00:00:00",
+      "age_category": "اقل من 5 سنوات",
+      "admission_date": "2025-06-30T00:00:00",
+      "admission_source": "Post delivery",
+      "admission_source_category": "Post delivery",
+      "admission_time": "10.00 a.m",
+      "direct_cause_of_death": "Cardiac arrest",
+      "direct_cause_code": "I46",
+      "death_date": "2025-07-01 07:28:00",
+      "death_time": "4.45 a.m",
+      "underlying_cause_of_death": "Common arterial trunk, ( Truncus arteriosus ) ",
+      "underlying_cause_code": "Q20.0",
+      "diagnosis_classification": "congenital malformations deformations,chromosomalmal abnormalities, and genetic disorders",
+      "who_category_1": "congenital  anomalies",
+      "who_category_2": "congenital heart anomalies",
+      "room_number": 237,
+      "nursing_department": "ICN",
+      "building": "rah",
+      "specialty": "طب أطفال",
+      "treating_doctor": "د. طالب محمد جمال",
+      "الطبيب مؤكد الوفاة": "د. علي الجيباوي",
+      "gender": "ذكر",
+      "إسم الأم": "ساندي",
+      "record_number": 19,
+      "insurance": "الامن العام",
+      "العنوان": "االجنوب دبل",
+      "length_of_stay": 0.75,
+      "include_kpi": "NO",
+      "": null,
+      "length_of_stay_original": "18 ساعة",
+      "kpi_expected": "NO",
+      "age_group": "اقل من 5 سنوات"
+    },
+    {
+      "year": 2025,
+      "month": 7,
+      "age": 74.0,
+      "birth_date": "1951-01-01T00:00:00",
+      "age_category": "من 71 -- 80 سنة",
+      "admission_date": "2025-07-22T00:00:00",
+      "admission_source": "ER",
+      "admission_source_category": "ER",
+      "admission_time": "5.05 A.M",
+      "direct_cause_of_death": "Septick Shock",
+      "direct_cause_code": "R57.2",
+      "death_date": "2025-07-22 17:00:00",
+      "death_time": "4.25 P.M",
+      "underlying_cause_of_death": "Bronchus or lung, unspecified",
+      "underlying_cause_code": "C34.9",
+      "diagnosis_classification": "Neoplasms",
+      "who_category_1": "malignant neoplasms",
+      "who_category_2": "trachea bronchus lung cancers",
+      "room_number": 618,
+      "nursing_department": "ER",
+      "building": "rah",
+      "specialty": "امراض صدرية وعناية فائقة",
+      "treating_doctor": "د. بلال عماد ضامن",
+      "الطبيب مؤكد الوفاة": "د. حنان تقي",
+      "gender": "ذكر",
+      "إسم الأم": "نورحمية",
+      "record_number": 385,
+      "insurance": "الجيش اللـبـنـانــي",
+      "العنوان": "خلدة ق طلعة ابوديب",
+      "length_of_stay": 0.4583333333333333,
+      "include_kpi": "NO",
+      "": null,
+      "length_of_stay_original": "11 ساعة",
+      "kpi_expected": "NO",
+      "age_group": "من 71 الى 80 سنة"
+    },
+    {
+      "year": 2025,
+      "month": 8,
+      "age": 18.0,
+      "birth_date": "20/11/2006",
+      "age_category": "من 16 - 30 سنة",
+      "admission_date": "2025-08-06T00:00:00",
+      "admission_source": "ER",
+      "admission_source_category": "ER",
+      "admission_time": "12.08 A.M",
+      "direct_cause_of_death": "Cardiac arrest",
+      "direct_cause_code": "I46",
+      "death_date": "2025-08-06 00:00:00",
+      "death_time": "04.05 P.M",
+      "underlying_cause_of_death": "Assault by other and unspecified firearm discharge",
+      "underlying_cause_code": "X95",
+      "diagnosis_classification": "external causes of morbidity",
+      "who_category_1": "injuries",
+      "who_category_2": "violance",
+      "room_number": 1223,
+      "nursing_department": "CCU",
+      "building": "bci",
+      "specialty": "امراض صدرية وعناية فائقة",
+      "treating_doctor": "د. شيرين علي ملاشي",
+      "الطبيب مؤكد الوفاة": "د. بتول مشيك",
+      "gender": "ذكر",
+      "إسم الأم": "عائشة",
+      "record_number": "سوري",
+      "insurance": "خاص",
+      "العنوان": "برج البراجنة",
+      "length_of_stay": 0.6666666666666666,
+      "include_kpi": "NO",
+      "": null,
+      "length_of_stay_original": "16 ساعة",
+      "kpi_expected": "NO",
+      "age_group": "من 16 الى 30 سنة"
+    },
+    {
+      "year": 2025,
+      "month": 8,
+      "age": 90.0,
+      "birth_date": "1935-01-01T00:00:00",
+      "age_category": "81 سنة و ما فوق",
+      "admission_date": "2025-08-20T00:00:00",
+      "admission_source": "ER",
+      "admission_source_category": "ER",
+      "admission_time": "6.22 P.M",
+      "direct_cause_of_death": "Cardiac arrest",
+      "direct_cause_code": "I46",
+      "death_date": "2025-08-21 00:00:00",
+      "death_time": "6.00 A.M",
+      "underlying_cause_of_death": "Pneumonitis due to food and vomit  (Aspiration pneumonia* foot(regugitated)-*gastric secretions*milk*vomit",
+      "underlying_cause_code": "J69.0",
+      "diagnosis_classification": "diseases of respiratory system",
+      "who_category_1": "respiratory diseases ",
+      "who_category_2": "other respiratory diseases ",
+      "room_number": 27,
+      "nursing_department": "ITCU",
+      "building": "rah",
+      "specialty": "امراض صدرية وعناية فائقة",
+      "treating_doctor": "د. علي رحاب رعد ",
+      "الطبيب مؤكد الوفاة": "د. علي رعد",
+      "gender": "ذكر",
+      "إسم الأم": "خديجة ",
+      "record_number": 2,
+      "insurance": "الجيش اللبناني",
+      "العنوان": "عين السكة",
+      "length_of_stay": 0.5,
+      "include_kpi": "NO",
+      "": null,
+      "length_of_stay_original": "12 ساعة",
+      "kpi_expected": "NO",
+      "age_group": "اكثر من 81 سنة"
+    },
+    {
+      "year": 2025,
+      "month": 8,
+      "age": 79.0,
+      "birth_date": "1946-01-01T00:00:00",
+      "age_category": "من 71 -- 80 سنة",
+      "admission_date": "2025-08-31T00:00:00",
+      "admission_source": "T.F.A.H ( Bekaa Hospital )",
+      "admission_source_category": "TRANSFER FROM ANOTHER HOSPITAL",
+      "admission_time": "5.00 P.M",
+      "direct_cause_of_death": "Cardiac arrest",
+      "direct_cause_code": "I46",
+      "death_date": "2025-08-31 00:00:00",
+      "death_time": "6.00 P.M",
+      "underlying_cause_of_death": "Dissection of aorta [any part",
+      "underlying_cause_code": "I71.0",
+      "diagnosis_classification": "diseases of circulatory system",
+      "who_category_1": "cardiovascular disease",
+      "who_category_2": "other circulatory disease",
+      "room_number": 1004,
+      "nursing_department": "CSU",
+      "building": "bci",
+      "specialty": "جراحة قلب وشرايين",
+      "treating_doctor": "د. علي إبراهيم السيد احمد",
+      "الطبيب مؤكد الوفاة": "د. محمد عيسى",
+      "gender": "انثى",
+      "إسم الأم": "نايفة الحمصي",
+      "record_number": "غير متوفر",
+      "insurance": "قوى الامن الداخلي - اقارب",
+      "العنوان": "سعدنايل",
+      "length_of_stay": null,
+      "include_kpi": "NO",
+      "": null,
+      "length_of_stay_original": "ساعة",
+      "kpi_expected": "NO",
+      "age_group": "من 71 الى 80 سنة"
+    }
+  ],
+  "total_patients": 5858,
+  "validation": {
+    "total_rows": 111,
+    "cleaned_rows": 111,
+    "removed_rows": 0,
+    "issues": {
+      "invalid_ages": 2,
+      "extremely_long_stays": 1
+    }
+  }
+}

@@ -19,9 +19,9 @@
 }
 
 .heroIcon {
-  font-size: 4rem;
   margin-bottom: 1rem;
-  display: block;
+  display: flex;
+  justify-content: center;
   animation: float 3s ease-in-out infinite;
 }
 

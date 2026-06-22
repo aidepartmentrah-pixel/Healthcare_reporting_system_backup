@@ -1,9 +1,23 @@
 import json
 from pathlib import Path
 
-BASE_DIR     = Path(__file__).resolve().parents[3]
-HISTORY_PATH = BASE_DIR / "storage" / "data" / "clabsi_history.json"
-CURRENT_PATH = BASE_DIR / "storage" / "data" / "clabsi_current.json"
+BASE_DIR          = Path(__file__).resolve().parents[3]
+HISTORY_PATH      = BASE_DIR / "storage" / "data" / "clabsi_history.json"
+_LEGACY_CURRENT   = BASE_DIR / "storage" / "data" / "clabsi_current.json"
+CASES_DIR         = BASE_DIR / "storage" / "data" / "CLABSI" / "cases"
+MAX_CASE_QUARTERS = 8
+
+_AR_TO_Q = {
+    "الفصل الأول":  1, "الفصل الاول": 1,
+    "الفصل الثاني": 2,
+    "الفصل الثالث": 3,
+    "الفصل الرابع": 4,
+}
+
+
+def _cases_file(quarter: str, year) -> Path:
+    n = _AR_TO_Q.get(str(quarter).strip(), 0)
+    return CASES_DIR / f"{year}_Q{n}.json"
 
 _QUARTER_TO_AR = {
     1: "الفصل الاول",
@@ -45,18 +59,65 @@ def save_history(history):
 
 
 def load_current():
-    """Return the latest quarter's raw cases (germs_distribution is stored in history)."""
-    if not CURRENT_PATH.exists():
-        return {}
-    with open(CURRENT_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+    """Return the latest quarter's raw cases (newest per-quarter file, legacy fallback)."""
+    if CASES_DIR.exists():
+        files = sorted(CASES_DIR.glob("*.json"))
+        if files:
+            with open(files[-1], "r", encoding="utf-8") as f:
+                return json.load(f)
+    if _LEGACY_CURRENT.exists():
+        with open(_LEGACY_CURRENT, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
 
 
 def save_current(data: dict):
-    """Overwrite the current-quarter file with raw cases only."""
-    CURRENT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(CURRENT_PATH, "w", encoding="utf-8") as f:
+    """Save raw cases to a per-quarter file and keep at most MAX_CASE_QUARTERS files."""
+    path = _cases_file(data.get("quarter", ""), data.get("year", ""))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+    files = sorted(CASES_DIR.glob("*.json"))
+    for old in files[:-MAX_CASE_QUARTERS]:
+        old.unlink(missing_ok=True)
+
+
+def load_cases_for_quarter(quarter: str, year) -> dict:
+    """Load individual cases for a specific quarter."""
+    path = _cases_file(quarter, str(year))
+    if path.exists():
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    # Fall back to legacy current file if quarter/year match
+    if _LEGACY_CURRENT.exists():
+        with open(_LEGACY_CURRENT, "r", encoding="utf-8") as f:
+            legacy = json.load(f)
+        if str(legacy.get("year")) == str(year) and _quarter_str(legacy.get("quarter")) == _quarter_str(quarter):
+            return legacy
+    return {"year": str(year), "quarter": quarter, "cases": []}
+
+
+def list_case_quarters() -> list:
+    """Return [{quarter, year}] for all stored case files, sorted oldest → newest."""
+    result = []
+    if CASES_DIR.exists():
+        for f in sorted(CASES_DIR.glob("*.json")):
+            try:
+                with open(f, "r", encoding="utf-8") as fh:
+                    d = json.load(fh)
+                if d.get("quarter") and d.get("year"):
+                    result.append({"quarter": d["quarter"], "year": d["year"]})
+            except Exception:
+                pass
+    if not result and _LEGACY_CURRENT.exists():
+        try:
+            with open(_LEGACY_CURRENT, "r", encoding="utf-8") as f:
+                d = json.load(f)
+            if d.get("quarter") and d.get("year"):
+                return [{"quarter": d["quarter"], "year": d["year"]}]
+        except Exception:
+            pass
+    return result
 
 
 def sort_history(history):

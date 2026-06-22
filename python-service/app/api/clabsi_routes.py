@@ -19,6 +19,8 @@ from app.infection_control.clabsi.history import (
     load_current,
     add_or_update_quarter,
     get_current_quarter,
+    load_cases_for_quarter,
+    list_case_quarters,
 )
 from app.infection_control.clabsi.clabsi_targets import CLABSI_TARGETS
 from app.infection_control.ic_statistics import InfectionControlStatistics, get_floors_from_excel
@@ -220,6 +222,18 @@ def get_current():
     return load_current()
 
 
+@router.get("/available-case-quarters")
+def get_available_case_quarters():
+    """Return list of [{quarter, year}] for which case files exist."""
+    return list_case_quarters()
+
+
+@router.get("/cases")
+def get_cases_for_quarter(quarter: str, year: str):
+    """Return raw case data for a specific quarter."""
+    return load_cases_for_quarter(quarter, year)
+
+
 @router.get("/targets")
 def get_targets():
     """Return CLABSI targets per 1,000 catheter days per department."""
@@ -228,17 +242,18 @@ def get_targets():
 
 
 @router.post("/generate-report")
-def generate_report():
-    """Generate a DOCX CLABSI report from history + current quarter data."""
+def generate_report(body: dict = {}):
+    """Generate a DOCX CLABSI report. Optional body: {quarter, year} to use a specific quarter's cases."""
     history = load_history()
     if not history:
         raise HTTPException(status_code=404, detail="No CLABSI data available")
     try:
         from app.infection_control.clabsi.docx_generator import CLABSIDocxGenerator
-        current = load_current()
-        gen     = CLABSIDocxGenerator()
         from app.infection_control.clabsi.clabsi_targets import get_clabsi_targets
-        result  = gen.generate_report(history=history, targets=get_clabsi_targets(), current=current)
+        q, y = body.get("quarter"), body.get("year")
+        current = load_cases_for_quarter(q, y) if (q and y) else load_current()
+        gen    = CLABSIDocxGenerator()
+        result = gen.generate_report(history=history, targets=get_clabsi_targets(), current=current)
         return {"success": True, "filePath": result["filePath"], "fileName": result["fileName"]}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))

@@ -67,9 +67,10 @@ BORDER_FINE   = {'val': 'single', 'sz': '4',  'color': '000000', 'space': '0'}
 BORDER_NONE   = {'val': 'none',   'sz': '0',  'color': 'FFFFFF', 'space': '0'}
 
 # ── Shading ───────────────────────────────────────────────────────────────────
-SHADE_HEADER = 'EDEBE3'
-SHADE_TABLE  = 'D9E2F3'
-SHADE_TOTAL  = 'F2F2F2'
+SHADE_HEADER    = 'EDEBE3'
+SHADE_TABLE     = 'D9E2F3'
+SHADE_TOTAL     = 'F2F2F2'
+SHADE_NO_TARGET = 'FFF3CD'   # amber — no-target floor columns
 
 # ── Quarter names ─────────────────────────────────────────────────────────────
 QUARTER_AR = {
@@ -210,7 +211,7 @@ class InfectionControlDocxGenerator:
         self._build_page1(doc, quarter, year, norm_current, norm_history, floors, targets)
 
         logger.info(f"[{cfg['indicator']}] Building floor pages ({len(active_floors)} floors)…")
-        self._build_floor_pages(doc, quarter, year, norm_current, norm_history, floors, charts)
+        self._build_floor_pages(doc, quarter, year, norm_current, norm_history, floors, charts, targets)
 
         logger.info(f"[{cfg['indicator']}] Building last page…")
         self._build_last_page(doc)
@@ -262,17 +263,23 @@ class InfectionControlDocxGenerator:
         floors = {}
         for dept, data in summary.items():
             floors[dept] = {
-                'cases':  data.get('cases') or 0,
-                'days':   data.get(cfg['days_key']) or 0,
-                'rate':   data.get('rate') or 0.0,
-                'target': targets.get(dept, 0.0),
+                'cases':      data.get('cases') or 0,
+                'days':       data.get(cfg['days_key']) or 0,
+                'rate':       data.get('rate') or 0.0,
+                'target':     targets.get(dept, 0.0),
+                'has_target': dept in targets,
             }
+
+        # Rate calculations use only targeted floors; total_cases includes all
+        targeted_days  = sum(v['days']  for v in floors.values() if v['has_target'])
+        targeted_cases = sum(v['cases'] for v in floors.values() if v['has_target'])
+        overall_rate   = round((targeted_cases / targeted_days) * 1000, 2) if targeted_days > 0 else 0.0
 
         return {
             'quarter':            quarter,
             'year':               year,
             'total_cases':        total_cases,
-            'total_days':         total_days,
+            'total_days':         targeted_days,
             'overall_rate':       overall_rate,
             'floors':             floors,
             'germs_distribution': entry.get('germs_distribution', {}),
@@ -555,9 +562,11 @@ class InfectionControlDocxGenerator:
                     left=BORDER_THICK, right=BORDER_THICK)
 
     def _fill_rates_cell(self, cell, floors: dict):
-        """Fill a results-table cell with floor=rate pairs."""
+        """Fill a results-table cell with floor=rate pairs; no-target floors show case count only."""
         pairs = []
         for dept, fd in floors.items():
+            if not fd.get('has_target', True):
+                continue   # no-target floors excluded from the result box
             try:
                 rate = float(fd.get('rate', 0.0) if fd else 0.0)
             except (TypeError, ValueError):
@@ -684,29 +693,45 @@ class InfectionControlDocxGenerator:
         self._set_cell_shading(table.cell(0, 0), SHADE_HEADER)
 
         for fi, floor in enumerate(floors):
-            b      = 1 + fi * 3
-            target = targets.get(floor, 0.0)
-            t_str  = str(int(target)) if target == int(target) else str(target)
-            hdr    = f'{floor}  (Target={t_str}‰)'
+            b          = 1 + fi * 3
+            target     = targets.get(floor)
+            has_target = target is not None
+            if has_target:
+                t_str  = str(int(target)) if target == int(target) else str(target)
+                hdr    = f'{floor}  (Target={t_str}‰)'
+                h_shade = SHADE_HEADER
+            else:
+                hdr    = f'{floor}  ( يوجد هدف لا)'
+                h_shade = SHADE_NO_TARGET
             table.cell(0, b).merge(table.cell(0, b + 2))
             self._style_cell(table.cell(0, b), hdr, FONT_EN, 8, bold=True)
-            self._set_cell_shading(table.cell(0, b), SHADE_HEADER)
+            self._set_cell_shading(table.cell(0, b), h_shade)
 
         # Row 1: sub-column labels — tall row so vertical text is fully visible
         table.rows[1].height      = Inches(1.1)
         table.rows[1].height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
         days_short = cfg['days_label_ar']
         for fi in range(N_FL):
-            b = 1 + fi * 3
-            self._style_cell(table.cell(1, b),     'النسبة',      FONT, 8, bold=True, rtl=True)
-            self._style_cell(table.cell(1, b + 1), 'عدد الحالات', FONT, 8, bold=True, rtl=True)
-            self._style_cell(table.cell(1, b + 2), days_short,    FONT, 8, bold=True, rtl=True)
-            self._set_cell_text_direction(table.cell(1, b))
-            self._set_cell_text_direction(table.cell(1, b + 1))
-            self._set_cell_text_direction(table.cell(1, b + 2))
-            self._set_cell_shading(table.cell(1, b),     SHADE_HEADER)
-            self._set_cell_shading(table.cell(1, b + 1), SHADE_HEADER)
-            self._set_cell_shading(table.cell(1, b + 2), SHADE_HEADER)
+            b          = 1 + fi * 3
+            has_target = targets.get(floors[fi]) is not None
+            if has_target:
+                self._style_cell(table.cell(1, b),     'النسبة',      FONT, 8, bold=True, rtl=True)
+                self._style_cell(table.cell(1, b + 1), 'عدد الحالات', FONT, 8, bold=True, rtl=True)
+                self._style_cell(table.cell(1, b + 2), days_short,    FONT, 8, bold=True, rtl=True)
+                self._set_cell_text_direction(table.cell(1, b))
+                self._set_cell_text_direction(table.cell(1, b + 1))
+                self._set_cell_text_direction(table.cell(1, b + 2))
+                self._set_cell_shading(table.cell(1, b),     SHADE_HEADER)
+                self._set_cell_shading(table.cell(1, b + 1), SHADE_HEADER)
+                self._set_cell_shading(table.cell(1, b + 2), SHADE_HEADER)
+            else:
+                merged = table.cell(1, b).merge(table.cell(1, b + 1))
+                self._style_cell(merged,               'عدد الحالات', FONT, 8, bold=True, rtl=True)
+                self._style_cell(table.cell(1, b + 2), days_short,    FONT, 8, bold=True, rtl=True)
+                self._set_cell_text_direction(merged)
+                self._set_cell_text_direction(table.cell(1, b + 2))
+                self._set_cell_shading(merged,               SHADE_NO_TARGET)
+                self._set_cell_shading(table.cell(1, b + 2), SHADE_NO_TARGET)
 
         # History data rows
         for r_i, entry in enumerate(recent_hist):
@@ -718,15 +743,24 @@ class InfectionControlDocxGenerator:
 
             fl = entry.get('floors', {})
             for fi, floor in enumerate(floors):
-                b   = 1 + fi * 3
-                fd  = fl.get(floor, {})
-                rate = fd.get('rate', 0.0)
-                cas  = fd.get('cases', 0)
-                dys  = fd.get('days', 0)
-                rs   = f'{rate:.2f}‰' if rate else '0‰'
-                self._style_cell(table.cell(ri, b),     rs,       FONT_EN, 8)
-                self._style_cell(table.cell(ri, b + 1), str(cas), FONT_EN, 8)
-                self._style_cell(table.cell(ri, b + 2), str(dys), FONT_EN, 8)
+                b          = 1 + fi * 3
+                fd         = fl.get(floor, {})
+                has_target = targets.get(floor) is not None
+                rate       = fd.get('rate', 0.0)
+                cas        = fd.get('cases', 0)
+                dys        = fd.get('days', 0)
+                if has_target:
+                    rs      = f'{rate:.2f}‰' if rate else '0‰'
+                    dys_str = str(dys)
+                    self._style_cell(table.cell(ri, b),     rs,       FONT_EN, 8)
+                    self._style_cell(table.cell(ri, b + 1), str(cas), FONT_EN, 8)
+                    self._style_cell(table.cell(ri, b + 2), dys_str,  FONT_EN, 8)
+                else:
+                    merged = table.cell(ri, b).merge(table.cell(ri, b + 1))
+                    self._style_cell(merged,                str(cas),  FONT_EN, 8)
+                    self._style_cell(table.cell(ri, b + 2), str(dys), FONT_EN, 8)
+                    self._set_cell_shading(merged,                SHADE_NO_TARGET)
+                    self._set_cell_shading(table.cell(ri, b + 2), SHADE_NO_TARGET)
 
         # Current quarter row (highlighted)
         ci        = 2 + len(recent_hist)
@@ -737,18 +771,27 @@ class InfectionControlDocxGenerator:
 
         fl_cur = current.get('floors', {})
         for fi, floor in enumerate(floors):
-            b   = 1 + fi * 3
-            fd  = fl_cur.get(floor, {})
-            rate = fd.get('rate', 0.0)
-            cas  = fd.get('cases', 0)
-            dys  = fd.get('days', 0)
-            rs   = f'{rate:.2f}‰' if rate else '0‰'
-            self._style_cell(table.cell(ci, b),     rs,       FONT_EN, 8, bold=True)
-            self._style_cell(table.cell(ci, b + 1), str(cas), FONT_EN, 8, bold=True)
-            self._style_cell(table.cell(ci, b + 2), str(dys), FONT_EN, 8, bold=True)
-            self._set_cell_shading(table.cell(ci, b),     SHADE_TABLE)
-            self._set_cell_shading(table.cell(ci, b + 1), SHADE_TABLE)
-            self._set_cell_shading(table.cell(ci, b + 2), SHADE_TABLE)
+            b          = 1 + fi * 3
+            fd         = fl_cur.get(floor, {})
+            has_target = targets.get(floor) is not None
+            rate       = fd.get('rate', 0.0)
+            cas        = fd.get('cases', 0)
+            dys        = fd.get('days', 0)
+            if has_target:
+                rs      = f'{rate:.2f}‰' if rate else '0‰'
+                dys_str = str(dys)
+                self._style_cell(table.cell(ci, b),     rs,       FONT_EN, 8, bold=True)
+                self._style_cell(table.cell(ci, b + 1), str(cas), FONT_EN, 8, bold=True)
+                self._style_cell(table.cell(ci, b + 2), dys_str,  FONT_EN, 8, bold=True)
+                self._set_cell_shading(table.cell(ci, b),     SHADE_TABLE)
+                self._set_cell_shading(table.cell(ci, b + 1), SHADE_TABLE)
+                self._set_cell_shading(table.cell(ci, b + 2), SHADE_TABLE)
+            else:
+                merged = table.cell(ci, b).merge(table.cell(ci, b + 1))
+                self._style_cell(merged,                str(cas),  FONT_EN, 8, bold=True)
+                self._style_cell(table.cell(ci, b + 2), str(dys), FONT_EN, 8, bold=True)
+                self._set_cell_shading(merged,                SHADE_NO_TARGET)
+                self._set_cell_shading(table.cell(ci, b + 2), SHADE_NO_TARGET)
 
         # Borders
         for r in range(TOTAL_ROWS):
@@ -812,7 +855,7 @@ class InfectionControlDocxGenerator:
     # PER-FLOOR PAGES (dynamic — one page per floor with data)
     # =========================================================================
 
-    def _build_floor_pages(self, doc, quarter, year, current, norm_history, floors, charts):
+    def _build_floor_pages(self, doc, quarter, year, current, norm_history, floors, charts, targets=None):
         cfg          = self.cfg
         indicator_ar = cfg['indicator_ar']
 
@@ -836,11 +879,13 @@ class InfectionControlDocxGenerator:
         table_num  = 2
 
         # Only render pages for floors that actually have cases
-        active_floors = [f for f in floors if current.get('floors', {}).get(f, {}).get('cases', 0) > 0]
+        active_floors    = [f for f in floors if current.get('floors', {}).get(f, {}).get('cases', 0) > 0]
+        targeted_active  = [f for f in active_floors if targets and targets.get(f)] if targets else active_floors
+        no_target_active = [f for f in active_floors if not (targets and targets.get(f))] if targets else []
 
         # Find the floor with the highest rate above its target (for notes)
         above_target_floors = [
-            f for f in active_floors
+            f for f in targeted_active
             if current.get('floors', {}).get(f, {}).get('rate', 0.0)
             > current.get('floors', {}).get(f, {}).get('target', 999.0)
         ]
@@ -851,14 +896,14 @@ class InfectionControlDocxGenerator:
         prev_quarter_label = prev_entry.get('quarter', '')
         prev_year_label    = str(prev_entry.get('year', ''))
 
-        for fi, floor in enumerate(active_floors):
+        for fi, floor in enumerate(targeted_active):
             floor_data = current.get('floors', {}).get(floor, {})
             rate       = floor_data.get('rate', 0.0)
             cases      = floor_data.get('cases', 0)
             target     = floor_data.get('target', 0.0)
             status     = 'ABOVE target' if rate > target else 'within target'
             logger.info(
-                f"[{cfg['indicator']}] Floor {fi+1}/{len(active_floors)}: {floor} — "
+                f"[{cfg['indicator']}] Floor {fi+1}/{len(targeted_active)}: {floor} — "
                 f"rate={rate:.2f}‰  cases={cases}  target={target}‰  ({status})"
             )
 
@@ -986,8 +1031,9 @@ class InfectionControlDocxGenerator:
                 table_num += 1
 
             # Page break between floors (skip on last floor)
-            if fi < len(active_floors) - 1:
+            if fi < len(targeted_active) - 1:
                 self._add_page_break(doc)
+
 
     def _add_section_title(self, doc, text):
         para = doc.add_paragraph()

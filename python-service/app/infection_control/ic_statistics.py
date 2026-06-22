@@ -86,14 +86,40 @@ def get_floors_from_excel(file_bytes: bytes, ic_type: str = None, quarter: int =
         if quarter:
             sem_col = col_lower.get('semester')
             if sem_col:
-                def _sem_match(v):
+                _SEM_TEXT = {
+                    'first': 1, 'one': 1, 'الأول': 1, 'الاول': 1, 'أول': 1, 'اول': 1,
+                    'الفصل الأول': 1, 'الفصل الاول': 1, 'الفصل 1': 1, 'فصل 1': 1,
+                    'second': 2, 'two': 2, 'الثاني': 2, 'ثاني': 2,
+                    'الفصل الثاني': 2, 'الفصل 2': 2, 'فصل 2': 2,
+                    'third': 3, 'three': 3, 'الثالث': 3, 'ثالث': 3,
+                    'الفصل الثالث': 3, 'الفصل 3': 3, 'فصل 3': 3,
+                    'fourth': 4, 'four': 4, 'الرابع': 4, 'رابع': 4,
+                    'الفصل الرابع': 4, 'الفصل 4': 4, 'فصل 4': 4,
+                    'q1': 1, 'q2': 2, 'q3': 3, 'q4': 4,
+                    'q 1': 1, 'q 2': 2, 'q 3': 3, 'q 4': 4,
+                    's1': 1, 's2': 2, 's3': 3, 's4': 4,
+                    'semester 1': 1, 'semester 2': 2, 'semester 3': 3, 'semester 4': 4,
+                    'quarter 1': 1, 'quarter 2': 2, 'quarter 3': 3, 'quarter 4': 4,
+                }
+
+                def _norm_sem(v) -> int | None:
                     if v is None:
-                        return True
+                        return None
+                    s = str(v).strip()
                     try:
-                        n = int(float(str(v).strip()))
-                        return 1 <= n <= 4 and n == quarter
+                        n = int(float(s))
+                        if 1 <= n <= 4:
+                            return n
                     except (ValueError, TypeError):
-                        return True  # unparseable → include
+                        pass
+                    return _SEM_TEXT.get(s.lower()) or _SEM_TEXT.get(s)
+
+                def _sem_match(v):
+                    n = _norm_sem(v)
+                    if n is None:
+                        return True   # blank → include
+                    return n == quarter
+
                 df = df[df[sem_col].apply(_sem_match)]
 
         floors = df[floor_col].dropna().astype(str).str.strip()

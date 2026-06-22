@@ -282,22 +282,29 @@ async def process_mortality_data(
         )
 
         # 12b. Save full stats to current data file (used by report generator + dashboard)
+        # Only non-KPI records are saved — they are the patient-detail rows used in
+        # the DOCX report's "deaths within 24h" page. All KPI=YES stats are pre-computed
+        # in `statistics` so raw records are not needed for the dashboard.
+        kpi_no_records = [
+            r for r in records
+            if str(r.get('include_kpi', 'YES')).strip().upper() != 'YES'
+        ]
         history_manager.save_current_data(
             quarter=quarter,
             year=year,
             statistics=convert_numpy(dict(stats)),
             who_categories=who_summary or [],
-            records=convert_numpy(records),
+            records=convert_numpy(kpi_no_records),
             total_patients=total_patients,
             validation=convert_numpy(validation),
         )
 
-        logger.success(f"✅ Processing complete: {len(records)} records, saved to history")
+        logger.success(f"✅ Processing complete: {len(records)} records ({len(kpi_no_records)} non-KPI), saved to history")
 
         return convert_numpy({
             "success": True,
             "data": {
-                "records": records,
+                "records": kpi_no_records,
                 "total_records": len(records),
                 "statistics": stats,
                 "who_categories": who_summary,
@@ -339,6 +346,43 @@ async def get_current():
         })
     except Exception as e:
         logger.error(f"Current data fetch error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/quarter")
+async def get_quarter_data(q: str, year: str):
+    """Return full dashboard data for a specific quarter (last 4 stored)."""
+    try:
+        entry = history_manager.get_current_data(q, year)
+        if not entry:
+            raise HTTPException(status_code=404, detail=f"No full data for {q} {year}. Upload it first.")
+        return convert_numpy({
+            "records":        entry.get("records", []),
+            "total_records":  len(entry.get("records", [])),
+            "statistics":     entry.get("statistics", {}),
+            "who_categories": entry.get("who_categories", []),
+            "validation":     entry.get("validation", {}),
+            "quarter":        entry.get("quarter", ""),
+            "year":           entry.get("year", ""),
+            "totalPatients":  entry.get("total_patients", 0),
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Quarter data fetch error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/available-quarters")
+async def get_available_quarters():
+    """Return list of quarters that have full data stored (up to last 4)."""
+    try:
+        entries = history_manager.load_current_data()
+        return convert_numpy([
+            {"quarter": e.get("quarter", ""), "year": e.get("year", "")}
+            for e in entries
+        ])
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
