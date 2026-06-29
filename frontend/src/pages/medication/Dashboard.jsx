@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styles from '../../styles/Dashboard.module.css';
 import DashboardSearch from '../../components/DashboardSearch';
+import { API_MEDICATION } from '../../config/api';
 
 import {
   LineChart, Line,
@@ -449,7 +450,7 @@ function MedicationDashboard({ language, data, medicationTarget = 0.03 }) {
 
   // Fetch lean history for trend charts only
   useEffect(() => {
-    fetch(`${window.__RUNTIME_CONFIG__?.apiBaseUrl || window.location.protocol + '//' + window.location.hostname + ':8000'}/api/medication/history`)
+    fetch(`${API_MEDICATION}/history`)
       .then(r => r.json())
       .then(result => { setHistory(Array.isArray(result) ? result : []); setHistoryLoading(false); })
       .catch(() => setHistoryLoading(false));

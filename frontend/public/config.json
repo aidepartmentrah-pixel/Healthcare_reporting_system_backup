@@ -1,5 +1,5 @@
 {
-  "apiBaseUrl": "http://170.70.32.34:8001",
+  "apiBaseUrl": "",
   "serverIp": "170.70.32.34",
-  "_note": "Update apiBaseUrl if server IP changes. No rebuild needed."
+  "_note": "apiBaseUrl left empty so the app calls the backend on whichever host/IP the browser used to load the frontend (port 8001). Set apiBaseUrl to override with a fixed IP."
 }

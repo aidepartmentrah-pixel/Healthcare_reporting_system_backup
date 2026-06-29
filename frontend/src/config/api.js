@@ -15,8 +15,8 @@ function getApiBaseUrl() {
   if (window.__RUNTIME_CONFIG__?.apiBaseUrl) {
     return window.__RUNTIME_CONFIG__.apiBaseUrl;
   }
-  // Fallback: same host, port 8000
-  return `${window.location.protocol}//${window.location.hostname}:8000`;
+  // Fallback: same host, port 8001 (Healthcare backend)
+  return `${window.location.protocol}//${window.location.hostname}:8001`;
 }
 
 // Export the base URL (computed once when module loads, but getter ensures freshness)
