@@ -349,7 +349,10 @@ function AppShell({
 
               {/* ── Protected: Reports (contain downloads) ── */}
               <Route path="/mortality/reports" element={
-                <ProtectedRoute><Reports data={mortalityData} language={language} selectedQ={mortalitySelectedQ} /></ProtectedRoute>
+                <ProtectedRoute><Reports language={language} selectedQ={mortalitySelectedQ} /></ProtectedRoute>
+              } />
+              <Route path="/ic/summary" element={
+                <InfectionControlReports type="vap" language={language} selectedQ={vapSelectedQ} summaryOnly />
               } />
               <Route path="/vap/reports" element={
                 <ProtectedRoute><InfectionControlReports type="vap" language={language} selectedQ={vapSelectedQ} /></ProtectedRoute>
@@ -361,7 +364,7 @@ function AppShell({
                 <ProtectedRoute><InfectionControlReports type="cauti" language={language} selectedQ={cautiSelectedQ} /></ProtectedRoute>
               } />
               <Route path="/medication/reports" element={
-                <ProtectedRoute><MedicationReports language={language} currentData={medicationData} selectedQ={medicationSelectedQ} /></ProtectedRoute>
+                <ProtectedRoute><MedicationReports language={language} selectedQ={medicationSelectedQ} /></ProtectedRoute>
               } />
             </Routes>
           </ErrorBoundary>

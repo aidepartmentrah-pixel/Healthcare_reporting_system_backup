@@ -63,9 +63,9 @@ const TYPE_CONFIG = {
     icon:         '🧬',
     daysKey:      'urinary_catheter_days',
     daysLabel:    { ar: 'أيام القسطرة البولية', en: 'Urinary Catheter Days' },
-    gradient:     'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
-    dark:         '#7c2d12',
-    light:        '#fff7ed',
+    gradient:     'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+    dark:         '#1e3a8a',
+    light:        '#eff6ff',
     insertionCol: 'Date of foley insertion',
   },
   vap: {
@@ -75,33 +75,34 @@ const TYPE_CONFIG = {
     icon:         '🫁',
     daysKey:      'ventilator_days',
     daysLabel:    { ar: 'أيام التنفس الاصطناعي', en: 'Ventilator Days' },
-    gradient:     'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)',
-    dark:         '#164e63',
-    light:        '#ecfeff',
+    gradient:     'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+    dark:         '#1e3a8a',
+    light:        '#eff6ff',
     insertionCol: 'Date of intubation',
   },
 };
 
-function InfectionControlReports({ type, selectedQ }) {
+function InfectionControlReports({ type, selectedQ, summaryOnly = false }) {
   const { t, i18n } = useTranslation();
   const ar  = i18n.language === 'ar';
   const cfg = TYPE_CONFIG[type];
 
-  const [tab,            setTab]           = useState('summary');
+  const [tab,            setTab]           = useState('floors');
   const [entry,          setEntry]          = useState(null);
   const [allEntries,     setAllEntries]     = useState([]);
   const [targets,        setTargets]        = useState({});
   const [loading,        setLoading]        = useState(true);
   const [generating,     setGenerating]     = useState(false);
   const [reportUrl,      setReportUrl]      = useState(null);
-  const [crossTypeGerms, setCrossTypeGerms] = useState(null);
-  const [casesEntry,     setCasesEntry]     = useState(null);
+  const [crossTypeGerms,    setCrossTypeGerms]    = useState(null);
+  const [casesEntry,        setCasesEntry]        = useState(null);
+  const [crossTypeTargets,  setCrossTypeTargets]  = useState({});
 
   useEffect(() => {
     setLoading(true);
     setEntry(null);
     setTargets({});
-    setTab('summary');
+    setTab('floors');
     setReportUrl(null);
     Promise.all([
       axios.get(`${cfg.apiBase}/history`),
@@ -131,8 +132,11 @@ function InfectionControlReports({ type, selectedQ }) {
     if (matched) { setEntry(matched); setReportUrl(null); }
   }, [selectedQ, allEntries]);
 
-  // Fetch raw cases for all 3 IC types for the active entry quarter
+  // Fetch raw cases for all 3 IC types.
+  // Normal mode: use the active entry's quarter (all 3 share the same quarter).
+  // Summary-only mode: each indicator uses its own latest entry quarter (they may differ).
   useEffect(() => {
+    if (summaryOnly) return; // handled separately below
     if (!entry?.quarter || !entry?.year) return;
     const q = encodeURIComponent(entry.quarter);
     const y = entry.year;
@@ -146,7 +150,40 @@ function InfectionControlReports({ type, selectedQ }) {
         results.forEach(r => { if (r.status === 'fulfilled') map[r.value.type] = r.value.cases; });
         setCasesEntry(map);
       });
-  }, [entry?.quarter, entry?.year]);
+  }, [entry?.quarter, entry?.year, summaryOnly]);
+
+  // Summary-only: fetch each indicator's cases using its OWN latest entry quarter.
+  useEffect(() => {
+    if (!summaryOnly || !crossTypeGerms?.length) return;
+    const SLUGS = { CAUTI: 'cauti', CLABSI: 'clabsi', VAP: 'vap' };
+    Promise.allSettled(
+      ['CAUTI', 'CLABSI', 'VAP'].map(label => {
+        const found = crossTypeGerms.find(d => d.label === label);
+        if (!found?.entries?.length) return Promise.resolve({ type: label, cases: [] });
+        const e = found.entries[found.entries.length - 1];
+        return axios.get(`${API_BASE}/api/${SLUGS[label]}/cases?quarter=${encodeURIComponent(e.quarter)}&year=${e.year}`)
+          .then(r => ({ type: label, cases: r.data?.cases || [] }))
+          .catch(() => ({ type: label, cases: [] }));
+      })
+    ).then(results => {
+      const map = { CAUTI: [], CLABSI: [], VAP: [] };
+      results.forEach(r => { if (r.status === 'fulfilled') map[r.value.type] = r.value.cases; });
+      setCasesEntry(map);
+    });
+  }, [summaryOnly, crossTypeGerms]);
+
+  // Fetch targets for all 3 IC types (needed for no-target section in summary mode).
+  useEffect(() => {
+    Promise.allSettled([
+      axios.get(`${API_BASE}/api/cauti/targets`).then(r  => ({ label: 'CAUTI',  targets: r.data || {} })),
+      axios.get(`${API_BASE}/api/clabsi/targets`).then(r => ({ label: 'CLABSI', targets: r.data || {} })),
+      axios.get(`${API_BASE}/api/vap/targets`).then(r    => ({ label: 'VAP',    targets: r.data || {} })),
+    ]).then(results => {
+      const map = {};
+      results.forEach(r => { if (r.status === 'fulfilled') map[r.value.label] = r.value.targets; });
+      setCrossTypeTargets(map);
+    });
+  }, []);
 
   // Fetch all 3 IC type histories for cross-indicator germ table.
   // Re-fetch whenever the active quarter changes so newly uploaded data appears immediately.
@@ -263,7 +300,6 @@ function InfectionControlReports({ type, selectedQ }) {
   const statCards = [];
 
   const tabs = [
-    { key: 'summary', icon: '📄', label: t('statisticsSummary') },
     { key: 'floors',  icon: '🏥', label: ar ? 'معدلات الأقسام' : 'Floor Rates' },
     { key: 'germs',   icon: '🧫', label: ar ? 'توزيع الجراثيم' : 'Germ Distribution' },
   ];
@@ -271,38 +307,40 @@ function InfectionControlReports({ type, selectedQ }) {
   return (
     <div className={styles.reportsContainer}>
 
-      {/* Header */}
-      <div className={styles.reportsHeader} style={{ background: cfg.gradient }}>
-        <div className={styles.headerContent}>
-          <div className={styles.headerLeft}>
-            <div className={styles.headerIconWrapper}>
-              <span className={styles.headerIcon}>{cfg.icon}</span>
+      {/* Header — hidden in summary-only mode */}
+      {!summaryOnly && (
+        <div className={styles.reportsHeader} style={{ background: cfg.gradient }}>
+          <div className={styles.headerContent}>
+            <div className={styles.headerLeft}>
+              <div className={styles.headerIconWrapper}>
+                <span className={styles.headerIcon}>{cfg.icon}</span>
+              </div>
+              <div>
+                <h1 className={styles.headerTitle}>
+                  {ar ? `تقارير ${cfg.label}` : `${cfg.label} Reports`}
+                </h1>
+                <p className={styles.headerSubtitle}>
+                  {ar
+                    ? 'توليد وتحميل التقرير التفصيلي'
+                    : 'Generate and download the detailed report'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className={styles.headerTitle}>
-                {ar ? `تقارير ${cfg.label}` : `${cfg.label} Reports`}
-              </h1>
-              <p className={styles.headerSubtitle}>
-                {ar
-                  ? 'توليد وتحميل التقرير التفصيلي'
-                  : 'Generate and download the detailed report'}
-              </p>
-            </div>
+            <button
+              onClick={handleGenerateReport}
+              className={styles.downloadButton}
+              disabled={generating}
+              style={{ opacity: generating ? 0.7 : 1, color: cfg.dark }}
+            >
+              <span className={styles.downloadButtonIcon}>📄</span>
+              {generating ? t('generating') : t('generateWordReport')}
+            </button>
           </div>
-          <button
-            onClick={handleGenerateReport}
-            className={styles.downloadButton}
-            disabled={generating}
-            style={{ opacity: generating ? 0.7 : 1, color: cfg.dark }}
-          >
-            <span className={styles.downloadButtonIcon}>📄</span>
-            {generating ? t('generating') : t('generateWordReport')}
-          </button>
         </div>
-      </div>
+      )}
 
-      {/* Download banner */}
-      {reportUrl && (
+      {/* Download banner — hidden in summary-only mode */}
+      {!summaryOnly && reportUrl && (
         <div style={{
           backgroundColor: cfg.dark, color: 'white', padding: '1rem 1.5rem',
           borderRadius: '12px', marginBottom: '1.5rem',
@@ -329,27 +367,29 @@ function InfectionControlReports({ type, selectedQ }) {
         </div>
       )}
 
-      {/* Tab selector */}
-      <div className={styles.typeSelector}>
-        <div className={styles.typeSelectorButtons}>
-          {tabs.map(tabItem => (
-            <button
-              key={tabItem.key}
-              onClick={() => setTab(tabItem.key)}
-              className={`${styles.typeButton} ${
-                tab === tabItem.key ? styles.typeButtonActive : styles.typeButtonInactive
-              }`}
-              style={tab === tabItem.key ? { background: cfg.gradient } : {}}
-            >
-              <span className={styles.typeButtonIcon}>{tabItem.icon}</span>
-              {tabItem.label}
-            </button>
-          ))}
+      {/* Tab selector — hidden in summary-only mode */}
+      {!summaryOnly && (
+        <div className={styles.typeSelector}>
+          <div className={styles.typeSelectorButtons}>
+            {tabs.map(tabItem => (
+              <button
+                key={tabItem.key}
+                onClick={() => setTab(tabItem.key)}
+                className={`${styles.typeButton} ${
+                  tab === tabItem.key ? styles.typeButtonActive : styles.typeButtonInactive
+                }`}
+                style={tab === tabItem.key ? { background: cfg.gradient } : {}}
+              >
+                <span className={styles.typeButtonIcon}>{tabItem.icon}</span>
+                {tabItem.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Summary ── */}
-      {tab === 'summary' && (
+      {summaryOnly && (
         <div className={styles.reportCard}>
           <div className={styles.reportCardHeader}>
             <div className={styles.reportCardIcon} style={{ background: summaryTheme.gradient }}>📊</div>
@@ -388,11 +428,21 @@ function InfectionControlReports({ type, selectedQ }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginTop: '1rem' }}>
               {indicatorStats.map(({ label, cases, rate, icCfg, ql }) => (
                 <div key={label} style={{ background: icCfg.gradient, borderRadius: 12, padding: '1rem 1.25rem', color: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 20 }}>{icCfg.icon}</span>
-                    <span style={{ fontWeight: 700, fontSize: 15 }}>{label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 20 }}>{icCfg.icon}</span>
+                      <span style={{ fontWeight: 700, fontSize: 15 }}>{label}</span>
+                    </div>
+                    {ql && (
+                      <span style={{
+                        background: 'rgba(255,255,255,0.22)', borderRadius: 20,
+                        padding: '2px 10px', fontSize: 11, fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {ql}
+                      </span>
+                    )}
                   </div>
-                  {ql && <div style={{ fontSize: 10, opacity: 0.75, marginBottom: 8 }}>{ql}</div>}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                     <div>
                       <div style={{ fontSize: 11, opacity: 0.85 }}>{ar ? 'عدد الحالات' : 'Cases'}</div>
@@ -413,9 +463,10 @@ function InfectionControlReports({ type, selectedQ }) {
           {['CAUTI', 'CLABSI', 'VAP'].map(label => {
             const icCfg = TYPE_CONFIG[label.toLowerCase()];
             const found = crossTypeGerms?.find(d => d.label === label);
-            const matched =
-              found?.entries.find(e => e.quarter === entry.quarter && String(e.year) === String(entry.year))
-              || found?.entries[found.entries.length - 1];
+            const matched = found?.entries?.length
+              ? (found.entries.find(e => e.quarter === entry.quarter && String(e.year) === String(entry.year))
+                 || found.entries[found.entries.length - 1])
+              : null;
             const germsByFloor = matched?.germs_distribution || {};
             const floors = Object.keys(germsByFloor).filter(f => Object.keys(germsByFloor[f] || {}).length > 0);
             if (!floors.length) return null;
@@ -466,14 +517,16 @@ function InfectionControlReports({ type, selectedQ }) {
           {/* ── Table 2: Germ Distribution by Infection Type (CAUTI / CLABSI / VAP) ── */}
           {(() => {
             if (!crossTypeGerms) return null;
-            // For the displayed quarter/year, find the matching entry per IC type
             const q = entry.quarter;
             const y = String(entry.year);
             const IC_TYPES = ['CAUTI', 'CLABSI', 'VAP'];
-            // Build germ → { CAUTI: n, CLABSI: n, VAP: n } from germs_distribution (per floor → sum)
+            // Build germ → { CAUTI: n, CLABSI: n, VAP: n } from germs_distribution (per floor → sum).
+            // Each indicator uses the matching quarter if available, otherwise falls back to its own latest entry.
             const germMap = {};
             crossTypeGerms.forEach(({ label, entries }) => {
-              const matched = entries.find(e => e.quarter === q && String(e.year) === y);
+              const matched =
+                entries.find(e => e.quarter === q && String(e.year) === y)
+                || entries[entries.length - 1];
               if (!matched) return;
               const dist = matched.germs_distribution || {};
               Object.values(dist).forEach(floorGerms => {
@@ -588,60 +641,62 @@ function InfectionControlReports({ type, selectedQ }) {
           })()}
 
           {/* ── No-target Departments ── */}
-          {noTargetEntries.length > 0 && (
-            <div style={{
-              marginTop: '1.5rem',
-              border: '1px solid #fde68a',
-              borderRadius: 12,
-              overflow: 'hidden',
-            }}>
-              <div style={{
-                background: 'linear-gradient(to right, #fffbeb, #fef3c7)',
-                padding: '0.75rem 1.25rem',
-                borderBottom: '1px solid #fde68a',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              }}>
-                <h4 style={{ margin: 0, color: '#92400e', fontSize: '0.95rem', fontWeight: 700 }}>
-                  ⚠ {ar ? 'أقسام بدون هدف محدد' : 'Departments without a target'}
-                </h4>
-                <span style={{
-                  background: '#f59e0b', color: '#fff',
-                  borderRadius: 999, padding: '2px 10px', fontSize: 12, fontWeight: 700,
-                }}>
-                  {noTargetCases} {ar ? 'حالة' : 'cases'}
-                </span>
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: '#fef9c3' }}>
-                    <th style={{ padding: '8px 14px', textAlign: 'start', fontWeight: 600, color: '#78350f', borderBottom: '1px solid #fde68a' }}>
-                      {ar ? 'القسم' : 'Department'}
-                    </th>
-                    <th style={{ padding: '8px 14px', textAlign: 'center', fontWeight: 600, color: '#78350f', borderBottom: '1px solid #fde68a' }}>
-                      {ar ? 'عدد الحالات' : 'Cases'}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {noTargetEntries.map(([dept, data], i) => (
-                    <tr key={dept} style={{ background: i % 2 === 0 ? '#fffbeb' : '#fff' }}>
-                      <td style={{ padding: '8px 14px', fontWeight: 600, color: '#92400e', borderBottom: '1px solid #fef3c7' }}>
-                        {dept}
-                      </td>
-                      <td style={{ padding: '8px 14px', textAlign: 'center', fontWeight: 700, color: '#b45309', borderBottom: '1px solid #fef3c7' }}>
-                        {data.cases || 0}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {(() => {
+            const renderNoTarget = (label, entries) => {
+              if (!entries.length) return null;
+              const totalCases = entries.reduce((s, [, d]) => s + (d.cases || 0), 0);
+              return (
+                <div key={label} style={{ marginTop: '1.5rem', border: '1px solid #fde68a', borderRadius: 12, overflow: 'hidden' }}>
+                  <div style={{ background: 'linear-gradient(to right, #fffbeb, #fef3c7)', padding: '0.75rem 1.25rem', borderBottom: '1px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <h4 style={{ margin: 0, color: '#92400e', fontSize: '0.95rem', fontWeight: 700 }}>
+                      ⚠ {label} — {ar ? 'أقسام بدون هدف محدد' : 'Departments without a target'}
+                    </h4>
+                    <span style={{ background: '#f59e0b', color: '#fff', borderRadius: 999, padding: '2px 10px', fontSize: 12, fontWeight: 700 }}>
+                      {totalCases} {ar ? 'حالة' : 'cases'}
+                    </span>
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: '#fef9c3' }}>
+                        <th style={{ padding: '8px 14px', textAlign: 'start', fontWeight: 600, color: '#78350f', borderBottom: '1px solid #fde68a' }}>{ar ? 'القسم' : 'Department'}</th>
+                        <th style={{ padding: '8px 14px', textAlign: 'center', fontWeight: 600, color: '#78350f', borderBottom: '1px solid #fde68a' }}>{ar ? 'عدد الحالات' : 'Cases'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {entries.map(([dept, data], i) => (
+                        <tr key={dept} style={{ background: i % 2 === 0 ? '#fffbeb' : '#fff' }}>
+                          <td style={{ padding: '8px 14px', fontWeight: 600, color: '#92400e', borderBottom: '1px solid #fef3c7' }}>{dept}</td>
+                          <td style={{ padding: '8px 14px', textAlign: 'center', fontWeight: 700, color: '#b45309', borderBottom: '1px solid #fef3c7' }}>{data.cases || 0}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            };
+
+            if (summaryOnly) {
+              // Show no-target blocks for all 3 indicators using each one's own data + targets
+              return ['CAUTI', 'CLABSI', 'VAP'].map(label => {
+                const found = crossTypeGerms?.find(d => d.label === label);
+                const matched = found?.entries?.length
+                  ? (found.entries.find(e => e.quarter === entry.quarter && String(e.year) === String(entry.year))
+                     || found.entries[found.entries.length - 1])
+                  : null;
+                const sum = matched?.summary || {};
+                const tgts = crossTypeTargets[label] || {};
+                const entries = Object.entries(sum).filter(([dept]) => !(dept in tgts) && (sum[dept]?.cases || 0) > 0);
+                return renderNoTarget(label, entries);
+              });
+            }
+
+            return renderNoTarget(cfg.label, noTargetEntries);
+          })()}
         </div>
       )}
 
       {/* ── Floor Rates ── */}
-      {tab === 'floors' && (
+      {!summaryOnly && tab === 'floors' && (
         <div className={styles.reportCard}>
           <div className={styles.reportCardHeader}>
             <div className={styles.reportCardIcon} style={{ background: cfg.gradient }}>🏥</div>
@@ -730,7 +785,7 @@ function InfectionControlReports({ type, selectedQ }) {
       )}
 
       {/* ── Germs ── */}
-      {tab === 'germs' && (
+      {!summaryOnly && tab === 'germs' && (
         <div className={styles.reportCard}>
           <div className={styles.reportCardHeader}>
             <div className={styles.reportCardIcon} style={{ background: cfg.gradient }}>🧫</div>

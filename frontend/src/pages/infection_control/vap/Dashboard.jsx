@@ -410,22 +410,12 @@ function VapDashboard({ language, selectedQuarter }) {
 
       const maxPct = Math.max(...top6.flatMap(r => quarterKeys.map(k => r.values[k]?.percent || 0)), 1);
 
-      const cellColor = (pct, qKey) => {
-        const n = pct / maxPct;
-        const r = Math.round(219 + (59  - 219) * n);
-        const g = Math.round(234 + (130 - 234) * n);
-        const b = Math.round(254 + (246 - 254) * n);
-        return `rgb(${qKey === latestKey ? Math.max(r-15,0) : r},`
-             + `${qKey === latestKey ? Math.max(g-15,0) : g},`
-             + `${qKey === latestKey ? Math.max(b-15,0) : b})`;
+      const cellColor = (count, qKey) => {
+        if (qKey === latestKey) return count > 0 ? '#3b82f6' : '#eff6ff';
+        return count > 0 ? '#dbeafe' : '#f8faff';
       };
-      const cellTextColor = (pct) => {
-        const n = pct / maxPct;
-        const lum = 0.2126 * (219 + (59  - 219) * n) / 255
-                  + 0.7152 * (234 + (130 - 234) * n) / 255
-                  + 0.0722 * (254 + (246 - 254) * n) / 255;
-        return lum < 0.45 ? '#fff' : '#1e293b';
-      };
+      const cellTextColor = (count, qKey) =>
+        qKey === latestKey && count > 0 ? '#fff' : '#1e293b';
 
       return (
         <div style={{ marginBottom: "2rem" }}>
@@ -436,18 +426,26 @@ function VapDashboard({ language, selectedQuarter }) {
                           gap: 6 }}>
               <div />
               {quarterKeys.map(k => (
-                <div key={k} style={{ textAlign: "center", fontSize: 12 }}>{k}</div>
+                <div key={k} style={{
+                  textAlign: "center", fontSize: 12, fontWeight: k === latestKey ? 700 : 500,
+                  color: k === latestKey ? '#1e3a8a' : '#374151',
+                  background: k === latestKey ? '#dbeafe' : 'transparent',
+                  borderRadius: 6, padding: '3px 4px',
+                }}>{k}</div>
               ))}
               {top6.map(row => (
                 <React.Fragment key={row.germ}>
-                  <div style={{ fontSize: 12 }}>{row.germ}</div>
+                  <div style={{ fontSize: 12, fontWeight: 500, color: '#374151', display: 'flex', alignItems: 'center' }}>{row.germ}</div>
                   {quarterKeys.map(k => {
                     const cell = row.values[k] || { count: 0, percent: 0 };
                     return (
-                      <div key={k} style={{ background: cellColor(cell.percent, k),
-                                            borderRadius: 8, padding: 8, textAlign: "center",
-                                            fontSize: 13, fontWeight: 700,
-                                            color: cellTextColor(cell.percent) }}>
+                      <div key={k} style={{
+                        background: cellColor(cell.count, k),
+                        borderRadius: 8, padding: 8, textAlign: "center",
+                        fontSize: 13, fontWeight: 700,
+                        color: cellTextColor(cell.count, k),
+                        boxShadow: k === latestKey ? 'inset 0 0 0 2px #2563eb' : 'none',
+                      }}>
                         {cell.count}
                         <div style={{ fontSize: 12 }}>({cell.percent.toFixed(0)}%)</div>
                       </div>
@@ -667,16 +665,24 @@ function VapDashboard({ language, selectedQuarter }) {
           const cx = x + width / 2;
           return (
             <g>
-              <text x={cx} y={y - 46} textAnchor="middle" fontSize={10} fontWeight={700} fill="#1e293b">
+              <text x={cx} y={y - 22} textAnchor="middle" fontSize={10} fontWeight={700} fill="#1e293b">
                 {Number(d.rate ?? 0).toFixed(1)}‰
               </text>
-              <text x={cx} y={y - 33} textAnchor="middle" fontSize={9} fill="#64748b">
+              <text x={cx} y={y - 10} textAnchor="middle" fontSize={9} fill="#64748b">
                 ({d.cases ?? 0})
               </text>
-              <text x={cx} y={y - 18} textAnchor="middle" fontSize={9} fill="#92400e" fontWeight={600}>
-                Target: {d.target}‰
-              </text>
             </g>
+          );
+        };
+
+        const TargetLabel = ({ x, y, width, index }) => {
+          if (width < 18) return null;
+          const d  = floorBarData[index] ?? {};
+          const cx = x + width / 2;
+          return (
+            <text x={cx} y={y - 8} textAnchor="middle" fontSize={9} fill="#92400e" fontWeight={600}>
+              Target: {d.target}‰
+            </text>
           );
         };
 
@@ -749,7 +755,9 @@ function VapDashboard({ language, selectedQuarter }) {
                 </Bar>
                 <Bar dataKey="target" name={t('vapTargetLabel')}
                      fill="#92400e" radius={[6, 6, 0, 0]}
-                     maxBarSize={maxBarSize} />
+                     maxBarSize={maxBarSize}>
+                  <LabelList content={TargetLabel} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
             </div>

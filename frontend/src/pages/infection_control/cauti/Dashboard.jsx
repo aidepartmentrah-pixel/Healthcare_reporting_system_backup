@@ -21,7 +21,7 @@ import { API_CAUTI as API_URL } from '../../../config/api';
 const GREEN  = "#16a34a";
 const RED    = "#dc2626";
 const AMBER  = "#f59e0b";
-const ORANGE = "#ea580c";
+const BLUE = "#2563eb";
 const BORDER = "#e5e7eb";
 const SLATE  = "#64748b";
 
@@ -131,7 +131,7 @@ function DepartmentGauge({ name, rate, target }) {
         <text x="100" y="82" textAnchor="middle" fontSize="22" fontWeight="800" fill={isAbove ? RED : GREEN}>
           {rate.toFixed(2)}‰
         </text>
-        <text x="100" y="14" textAnchor="middle" fontSize="10" fontWeight="600" fill="#92400e">
+        <text x="100" y="14" textAnchor="middle" fontSize="10" fontWeight="600" fill="#1e40af">
           {t("vapTarget")} {target}‰
         </text>
       </svg>
@@ -234,7 +234,7 @@ function CautiDashboard({ selectedQuarter }) {
           <p className={styles.pageSubtitle}>{t("cautiDashboardSubtitle")}</p>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#c2410c", background: "#ffedd5", padding: "6px 14px", borderRadius: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#1d4ed8", background: "#dbeafe", padding: "6px 14px", borderRadius: 10 }}>
             {qLabel(latestHistory.quarter, latestHistory.year, t)}
           </div>
           <div style={{ fontSize: 11, color: SLATE, marginTop: 4 }}>{t("currentQuarter")}</div>
@@ -250,8 +250,8 @@ function CautiDashboard({ selectedQuarter }) {
 
       {/* ── Quarterly Performance Table ── */}
       <div id="cauti-performance" style={{ background: "#ffffff", borderRadius: "14px", boxShadow: "0 6px 18px rgba(0,0,0,0.06)", overflow: "hidden" }}>
-        <div style={{ padding: "1rem 1.5rem", background: "linear-gradient(to right, #ffedd5, #ffffff)", borderBottom: "1px solid #e2e8f0" }}>
-          <h3 style={{ margin: 0, color: "#7c2d12" }}>{t("cautiQuarterlyPerformance")}</h3>
+        <div style={{ padding: "1rem 1.5rem", background: "linear-gradient(to right, #dbeafe, #ffffff)", borderBottom: "1px solid #e2e8f0" }}>
+          <h3 style={{ margin: 0, color: "#1e3a8a" }}>{t("cautiQuarterlyPerformance")}</h3>
         </div>
 
         <div style={{ overflowX: "auto" }}>
@@ -368,16 +368,24 @@ function CautiDashboard({ selectedQuarter }) {
           const cx = x + width / 2;
           return (
             <g>
-              <text x={cx} y={y - 46} textAnchor="middle" fontSize={10} fontWeight={700} fill="#1e293b">
+              <text x={cx} y={y - 22} textAnchor="middle" fontSize={10} fontWeight={700} fill="#1e293b">
                 {Number(d.rate ?? 0).toFixed(1)}‰
               </text>
-              <text x={cx} y={y - 33} textAnchor="middle" fontSize={9} fill="#64748b">
+              <text x={cx} y={y - 10} textAnchor="middle" fontSize={9} fill="#64748b">
                 ({d.cases ?? 0})
               </text>
-              <text x={cx} y={y - 18} textAnchor="middle" fontSize={9} fill="#92400e" fontWeight={600}>
-                Target: {d.target}‰
-              </text>
             </g>
+          );
+        };
+
+        const TargetLabel = ({ x, y, width, index }) => {
+          if (width < 18) return null;
+          const d  = floorBarData[index] ?? {};
+          const cx = x + width / 2;
+          return (
+            <text x={cx} y={y - 8} textAnchor="middle" fontSize={9} fill="#92400e" fontWeight={600}>
+              Target: {d.target}‰
+            </text>
           );
         };
 
@@ -385,7 +393,7 @@ function CautiDashboard({ selectedQuarter }) {
           <div id="cauti-floor-comparison" dir="ltr" style={{ background: "#ffffff", borderRadius: "14px",
                         boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
                         padding: "1.5rem", marginBottom: "2rem", marginTop: "2rem" }}>
-            <h3 style={{ margin: "0 0 1rem", color: "#7c2d12" }}>
+            <h3 style={{ margin: "0 0 1rem", color: "#1e3a8a" }}>
               {t('cautiDashboardTitle')} — {t('floorRateComparison')} ({qLabel(latestHistory.quarter, latestHistory.year, t)})
             </h3>
             <div style={{ position: 'relative' }}>
@@ -450,7 +458,9 @@ function CautiDashboard({ selectedQuarter }) {
                 </Bar>
                 <Bar dataKey="target" name={t('vapTargetLabel')}
                      fill="#92400e" radius={[6, 6, 0, 0]}
-                     maxBarSize={maxBarSize} />
+                     maxBarSize={maxBarSize}>
+                  <LabelList content={TargetLabel} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
             </div>
@@ -526,28 +536,17 @@ function CautiDashboard({ selectedQuarter }) {
           const topGerms   = germData.slice(0, 6);
           const maxPercent = Math.max(...topGerms.flatMap(r => quarterKeys.map(q => r.values[q]?.percent || 0)), 1);
 
-          const getColor = (pct, qk) => {
-            const n = pct / maxPercent;
-            const s = { r: 254, g: 237, b: 213 };
-            const e = { r: 124, g: 45,  b: 18  };
-            let r = Math.round(s.r + (e.r - s.r) * n);
-            let g = Math.round(s.g + (e.g - s.g) * n);
-            let b = Math.round(s.b + (e.b - s.b) * n);
-            if (qk === latestQKey) { r = Math.max(r - 15, 0); g = Math.max(g - 15, 0); b = Math.max(b - 15, 0); }
-            return `rgb(${r},${g},${b})`;
+          const getColor = (count, qk) => {
+            if (qk === latestQKey) return count > 0 ? '#3b82f6' : '#eff6ff';
+            return count > 0 ? '#dbeafe' : '#f8faff';
           };
-          const heatTextColor = (pct) => {
-            const n = pct / maxPercent;
-            const lum = 0.2126 * (254 + (124 - 254) * n) / 255
-                      + 0.7152 * (237 + (45  - 237) * n) / 255
-                      + 0.0722 * (213 + (18  - 213) * n) / 255;
-            return lum < 0.45 ? '#fff' : '#1e293b';
-          };
+          const heatTextColor = (count, qk) =>
+            qk === latestQKey && count > 0 ? '#fff' : '#1e293b';
 
           return (
             <div key={dept} id={`cauti-dept-${dept}`} style={{ marginBottom: "4rem", background: "#ffffff", borderRadius: "16px", boxShadow: "0 6px 20px rgba(0,0,0,0.05)", padding: "2rem" }}>
 
-              <h2 style={{ marginBottom: "2rem", color: "#7c2d12" }}>
+              <h2 style={{ marginBottom: "2rem", color: "#1e3a8a" }}>
                 {dept} — {qLabel(latestHistory.quarter, latestHistory.year, t)}
               </h2>
 
@@ -567,9 +566,9 @@ function CautiDashboard({ selectedQuarter }) {
                       <YAxis hide />
                       <Tooltip {...TS} formatter={(v, n) => [`${v.toFixed(2)}‰`, n]} />
                       <Legend verticalAlign="top" height={30} />
-                      <Line type="monotone" dataKey="rate" name="Result" stroke={ORANGE} strokeWidth={2.5} dot={{ r: 4, fill: ORANGE }}
-                        label={{ position: "top", fontSize: 10, fontWeight: 700, fill: ORANGE, formatter: v => `${v.toFixed(1)}‰` }} />
-                      <Line type="monotone" dataKey="target" name={t("vapTargetLabel")} stroke="#92400e" strokeDasharray="6 3" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="rate" name="Result" stroke={BLUE} strokeWidth={2.5} dot={{ r: 4, fill: BLUE }}
+                        label={{ position: "top", fontSize: 10, fontWeight: 700, fill: BLUE, formatter: v => `${v.toFixed(1)}‰` }} />
+                      <Line type="monotone" dataKey="target" name={t("vapTargetLabel")} stroke={AMBER} strokeDasharray="6 3" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -582,14 +581,26 @@ function CautiDashboard({ selectedQuarter }) {
                   <div style={{ overflowX: "auto" }}>
                     <div style={{ display: "grid", gridTemplateColumns: `200px repeat(${quarterKeys.length}, 1fr)`, gap: 6 }}>
                       <div />
-                      {quarterKeys.map(q => <div key={q} style={{ textAlign: "center", fontSize: 12 }}>{q}</div>)}
+                      {quarterKeys.map(q => (
+                        <div key={q} style={{
+                          textAlign: "center", fontSize: 12, fontWeight: q === latestQKey ? 700 : 500,
+                          color: q === latestQKey ? '#1e3a8a' : '#374151',
+                          background: q === latestQKey ? '#dbeafe' : 'transparent',
+                          borderRadius: 6, padding: '3px 4px',
+                        }}>{q}</div>
+                      ))}
                       {topGerms.map(row => (
                         <React.Fragment key={row.germ}>
-                          <div style={{ fontSize: 12 }}>{row.germ}</div>
+                          <div style={{ fontSize: 12, fontWeight: 500, color: '#374151', display: 'flex', alignItems: 'center' }}>{row.germ}</div>
                           {quarterKeys.map(q => {
                             const cell = row.values[q] || { count: 0, percent: 0 };
                             return (
-                              <div key={q} style={{ background: getColor(cell.percent, q), borderRadius: 8, padding: 8, textAlign: "center", fontSize: 13, fontWeight: 700, color: heatTextColor(cell.percent) }}>
+                              <div key={q} style={{
+                                background: getColor(cell.count, q), borderRadius: 8, padding: 8,
+                                textAlign: "center", fontSize: 13, fontWeight: 700,
+                                color: heatTextColor(cell.count, q),
+                                boxShadow: q === latestQKey ? 'inset 0 0 0 2px #2563eb' : 'none',
+                              }}>
                                 {cell.count}
                                 <div style={{ fontSize: 12 }}>({cell.percent.toFixed(0)}%)</div>
                               </div>
@@ -612,11 +623,11 @@ function CautiDashboard({ selectedQuarter }) {
                   .filter(r => r.count > 0)
                   .sort((a, b) => b.count - a.count);
                 if (!rows.length) return null;
-                const thS = { padding: '9px 10px', textAlign: 'start', fontWeight: 700, color: '#7c2d12', whiteSpace: 'nowrap', borderBottom: '2px solid #fed7aa', background: '#ffedd5' };
+                const thS = { padding: '9px 10px', textAlign: 'start', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap', borderBottom: '2px solid #93c5fd', background: '#dbeafe' };
                 const tdS = { padding: '8px 10px', borderBottom: '1px solid #e2e8f0', verticalAlign: 'middle' };
                 return (
                   <div style={{ marginBottom: '2rem' }} dir={ar ? 'rtl' : 'ltr'}>
-                    <h3 style={{ marginBottom: 12, color: '#7c2d12' }}>
+                    <h3 style={{ marginBottom: 12, color: '#1e3a8a' }}>
                       {ar ? `عوامل الخطر — ${dept}` : `Risk Factors — ${dept}`}
                     </h3>
                     <div style={{ overflowX: 'auto', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' }}>
@@ -630,13 +641,13 @@ function CautiDashboard({ selectedQuarter }) {
                         </thead>
                         <tbody>
                           {rows.map((row, i) => (
-                            <tr key={row.label} style={{ background: i % 2 === 0 ? '#fff' : '#fff7ed' }}>
+                            <tr key={row.label} style={{ background: i % 2 === 0 ? '#fff' : '#eff6ff' }}>
                               <td style={tdS}>{row.label}</td>
                               <td style={{ ...tdS, textAlign: 'center', fontWeight: 700 }}>{row.count}</td>
                               <td style={{ ...tdS, textAlign: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                   <div style={{ flex: 1, background: '#f1f5f9', borderRadius: 4, height: 8, overflow: 'hidden' }}>
-                                    <div style={{ width: `${(row.count / total * 100).toFixed(0)}%`, height: '100%', background: '#c2410c', borderRadius: 4 }} />
+                                    <div style={{ width: `${(row.count / total * 100).toFixed(0)}%`, height: '100%', background: '#1d4ed8', borderRadius: 4 }} />
                                   </div>
                                   <span style={{ minWidth: 44, textAlign: 'right', fontWeight: 600, color: '#374151' }}>
                                     {(row.count / total * 100).toFixed(1)}%
@@ -656,8 +667,8 @@ function CautiDashboard({ selectedQuarter }) {
               {(() => {
                 const tableCases = (casesData?.cases || currentData?.cases || []).filter(c => c.floor === dept);
                 const thS = { padding: '9px 10px', textAlign: 'start', fontWeight: 700,
-                              color: '#7c2d12', whiteSpace: 'nowrap',
-                              borderBottom: '2px solid #fed7aa', background: '#ffedd5' };
+                              color: '#1e3a8a', whiteSpace: 'nowrap',
+                              borderBottom: '2px solid #93c5fd', background: '#dbeafe' };
                 const tdS = { padding: '7px 10px', borderBottom: '1px solid #e2e8f0',
                               verticalAlign: 'top', textAlign: 'start' };
                 const hdrs = ar
@@ -666,7 +677,7 @@ function CautiDashboard({ selectedQuarter }) {
                 return (
                   <div style={{ marginTop: '2rem' }} dir={ar ? 'rtl' : 'ltr'}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                      <h3 style={{ margin: 0, color: '#7c2d12' }}>
+                      <h3 style={{ margin: 0, color: '#1e3a8a' }}>
                         {ar ? `حالات مفصلة — ${dept}` : `Detailed Cases — ${dept}`}
                         {(casesData || currentData) && (
                           <span style={{ fontSize: 13, fontWeight: 400, color: SLATE, marginInlineStart: 8 }}>
@@ -693,7 +704,7 @@ function CautiDashboard({ selectedQuarter }) {
                         </thead>
                         <tbody>
                           {tableCases.map((c, i) => (
-                            <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#fff7ed' }}>
+                            <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#eff6ff' }}>
                               <td style={{ ...tdS, fontWeight: 600, whiteSpace: 'nowrap' }}>
                                 {fmtNum(c.case_number) !== '—' ? fmtNum(c.case_number) : i + 1}
                               </td>

@@ -10,7 +10,7 @@ const QUARTER_ORDER = {
 };
 
 
-function Reports({ data, selectedQ }) {
+function Reports({ selectedQ }) {
   const { t } = useTranslation();
   const [reportType, setReportType]   = useState('summary');
   const [generating, setGenerating]   = useState(false);
@@ -18,6 +18,7 @@ function Reports({ data, selectedQ }) {
   const [history, setHistory]         = useState([]);
   const [loading, setLoading]         = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [fullData, setFullData]       = useState(null);
 
   useEffect(() => {
     axios.get(`${API_URL}/history`)
@@ -29,8 +30,7 @@ function Reports({ data, selectedQ }) {
           return (QUARTER_ORDER[b.quarter] || 0) - (QUARTER_ORDER[a.quarter] || 0);
         });
         setHistory(sorted);
-        // Prefer the quarter selected from the top-of-page selector, then the latest data prop
-        const preferred = selectedQ || (data?.quarter ? { quarter: data.quarter, year: String(data.year) } : null);
+        const preferred = selectedQ;
         const idx = preferred
           ? sorted.findIndex(e => e.quarter === preferred.quarter && String(e.year) === String(preferred.year))
           : -1;
@@ -49,9 +49,15 @@ function Reports({ data, selectedQ }) {
 
   const entry = history[selectedIndex] || null;
 
-  // Detailed table is only available when the selected quarter matches the current upload session
-  const hasRecords = data && Array.isArray(data.records) && data.records.length > 0
-    && entry && data.quarter === entry.quarter && String(data.year) === String(entry.year);
+  // Fetch full quarter data (records + statistics) from the per-quarter file
+  useEffect(() => {
+    if (!entry) { setFullData(null); return; }
+    axios.get(`${API_URL}/quarter?q=${encodeURIComponent(entry.quarter)}&year=${entry.year}`)
+      .then(r => setFullData(r.data))
+      .catch(() => setFullData(null));
+  }, [entry?.quarter, entry?.year]);
+
+  const hasRecords = Array.isArray(fullData?.records) && fullData.records.length > 0;
 
   const handleGenerateReport = async () => {
     if (!entry) return;
@@ -138,7 +144,7 @@ function Reports({ data, selectedQ }) {
       {/* Download banner */}
       {reportUrl && (
         <div style={{
-          backgroundColor: '#10b981', color: 'white',
+          backgroundColor: '#2563eb', color: 'white',
           padding: '1rem 1.5rem', borderRadius: '12px', marginBottom: '1.5rem',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
@@ -153,7 +159,7 @@ function Reports({ data, selectedQ }) {
             href={reportUrl}
             download
             style={{
-              backgroundColor: 'white', color: '#10b981',
+              backgroundColor: 'white', color: '#1e3a8a',
               padding: '0.5rem 1.5rem', borderRadius: '8px',
               fontWeight: 'bold', textDecoration: 'none',
               display: 'flex', alignItems: 'center', gap: '0.5rem',
@@ -356,7 +362,7 @@ function Reports({ data, selectedQ }) {
                   </tr>
                 </thead>
                 <tbody className={styles.tableBody}>
-                  {data.records.slice(0, 50).map((record, index) => (
+                  {fullData.records.slice(0, 50).map((record, index) => (
                     <tr key={index} className={styles.tableBodyRow}>
                       <td className={styles.tableBodyCell}>
                         <div className={styles.tableCellNumber}>
@@ -378,8 +384,7 @@ function Reports({ data, selectedQ }) {
                       </td>
                       <td className={styles.tableBodyCell}>
                         <span className={styles.tableCellLOS}>
-                          {record.los}
-                          <span className={styles.tableCellLOSUnit}>{t('days')}</span>
+                          {record.length_of_stay_original ?? record.length_of_stay ?? record.los}
                         </span>
                       </td>
                       <td className={styles.tableBodyCell}>
@@ -392,7 +397,7 @@ function Reports({ data, selectedQ }) {
             </div>
           </div>
 
-          {data.records.length > 50 && (
+          {fullData.records.length > 50 && (
             <div className={styles.tableInfoBanner}>
               <p className={styles.tableInfoText}>
                 <span className={styles.tableInfoIcon}>ℹ️</span>
