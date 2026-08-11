@@ -1,0 +1,15 @@
+venv/
+venv311/
+venv_offline/
+__pycache__/
+**/__pycache__/
+*.pyc
+storage/
+logs/
+*.log
+HealthcareBackend.exe
+HealthcareBackend.xml
+start_backend.bat
+.env
+.env.local
+.git/

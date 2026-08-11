@@ -1,21 +1,36 @@
-version: '3.8'
-
 services:
-  python-service:
+  backend:
     build: ./python-service
+    container_name: healthcare-backend
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      # External 8001 matches the hardcoded fallback in frontend/src/config/api.js
+      # (`${hostname}:8001`). If you change this, also update
+      # frontend/public/config.json's apiBaseUrl and rebuild the frontend image.
+      - "${BACKEND_PORT:-8001}:8000"
     environment:
-      - PORT=8000
-      - ENABLE_AI=false
+      - ENVIRONMENT=production
+      - ENABLE_AI=${ENABLE_AI:-false}
     volumes:
-      - ./storage:/app/storage
+      # Two separate storage roots because the app code itself resolves
+      # paths inconsistently: most modules use bare "storage/..." (relative
+      # to /app), a few use "../storage/..." (one level above /app).
+      - ./python-service/storage:/app/storage
+      - ./storage:/storage
+      - ./python-service/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   frontend:
     build: ./frontend
+    container_name: healthcare-frontend
+    restart: unless-stopped
     ports:
-      - "5173:80"
-    environment:
-      - VITE_API_URL=http://localhost:8000
+      - "${FRONTEND_PORT:-8080}:80"
     depends_on:
-      - python-service
+      backend:
+        condition: service_healthy
