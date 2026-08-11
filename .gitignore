@@ -57,3 +57,6 @@ python-service/storage/reports/*
 release/docker-images/*.tar
 release/checksums/release_hashes.txt
 release/compose/RELEASE_VERSION.txt
+
+# Packager output — fully generated, never hand-authored
+/release_packager/
