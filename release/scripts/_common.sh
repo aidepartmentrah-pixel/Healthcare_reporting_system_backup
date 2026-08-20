@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RELEASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 DEPLOY_DIR="${DEPLOY_DIR:-/opt/healthcare-reporting}"
-COMPOSE_FILE="$DEPLOY_DIR/docker-compose.offline.yml"
+COMPOSE_FILE="$DEPLOY_DIR/docker-compose.yml"
 ENV_FILE="$DEPLOY_DIR/.env"
 
 compose() {

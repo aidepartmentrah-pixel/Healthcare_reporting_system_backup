@@ -12,7 +12,7 @@ if [ -z "$ARCHIVE" ] || [ ! -f "$ARCHIVE" ]; then
 fi
 if [ "${2:-}" != "" ]; then
     DEPLOY_DIR="$2"
-    COMPOSE_FILE="$DEPLOY_DIR/docker-compose.offline.yml"
+    COMPOSE_FILE="$DEPLOY_DIR/docker-compose.yml"
     ENV_FILE="$DEPLOY_DIR/.env"
 fi
 STORAGE_ROOT="$(read_env_var STORAGE_ROOT "$DEPLOY_DIR/storage")"

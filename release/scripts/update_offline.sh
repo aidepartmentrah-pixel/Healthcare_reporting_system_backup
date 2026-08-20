@@ -8,7 +8,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
 
 if [ "${1:-}" != "" ]; then
     DEPLOY_DIR="$1"
-    COMPOSE_FILE="$DEPLOY_DIR/docker-compose.offline.yml"
+    COMPOSE_FILE="$DEPLOY_DIR/docker-compose.yml"
     ENV_FILE="$DEPLOY_DIR/.env"
 fi
 
@@ -27,7 +27,7 @@ echo "==> Backing up storage before updating (see backup_storage.sh output below
 "$SCRIPT_DIR/backup_storage.sh" "$DEPLOY_DIR"
 
 echo "==> Updating compose file"
-cp "$RELEASE_DIR/compose/docker-compose.offline.yml" "$COMPOSE_FILE"
+cp "$RELEASE_DIR/compose/docker-compose.yml" "$COMPOSE_FILE"
 
 echo "==> Recreating containers with the new images (storage volumes untouched)"
 compose up -d

@@ -6,7 +6,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
 
 if [ "${1:-}" != "" ]; then
     DEPLOY_DIR="$1"
-    COMPOSE_FILE="$DEPLOY_DIR/docker-compose.offline.yml"
+    COMPOSE_FILE="$DEPLOY_DIR/docker-compose.yml"
     ENV_FILE="$DEPLOY_DIR/.env"
 fi
 
