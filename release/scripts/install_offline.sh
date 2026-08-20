@@ -25,7 +25,7 @@ if [ -f "$ENV_FILE" ]; then
     echo "==> .env already exists at $ENV_FILE — leaving it untouched"
 else
     echo "==> Creating .env from template"
-    cp "$RELEASE_DIR/compose/.env.offline.template" "$ENV_FILE"
+    cp "$RELEASE_DIR/configuration/.env.offline.template" "$ENV_FILE"
     # Anchor STORAGE_ROOT to the actual install location, so a custom
     # deploy_dir doesn't silently fall back to the template's /opt default.
     sed -i "s#^STORAGE_ROOT=.*#STORAGE_ROOT=${DEPLOY_DIR}/storage#" "$ENV_FILE"
